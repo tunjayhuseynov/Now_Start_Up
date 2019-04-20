@@ -37,7 +37,7 @@ public class HomePage extends AppCompatActivity {
             case R.id.camera:
                 Intent intent = new Intent(this, Camera.class);
                 this.startActivity(intent);
-                Toast.makeText(this, "Alindi", Toast.LENGTH_LONG).show();
+
                 return true;
             case R.id.help:
 

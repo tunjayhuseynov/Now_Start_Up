@@ -1,21 +1,26 @@
 package com.now.startupteamnow;
 
 
-import androidx.appcompat.app.AlertDialog;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.ActivityCompat;
-
 import android.Manifest;
+import android.app.Activity;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Point;
+import android.graphics.Rect;
+import android.hardware.camera2.CameraAccessException;
+import android.hardware.camera2.CameraCharacteristics;
+import android.hardware.camera2.CameraManager;
 import android.location.Location;
-import android.location.LocationManager;
+import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
-
 import android.provider.Settings;
+import android.util.Log;
+import android.util.SparseIntArray;
+import android.view.Surface;
 import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
@@ -23,30 +28,45 @@ import android.widget.Toast;
 import com.camerakit.CameraKitView;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
-import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationCallback;
-import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
-
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.ml.vision.FirebaseVision;
+import com.google.firebase.ml.vision.barcode.FirebaseVisionBarcode;
+import com.google.firebase.ml.vision.barcode.FirebaseVisionBarcodeDetector;
+import com.google.firebase.ml.vision.barcode.FirebaseVisionBarcodeDetectorOptions;
+import com.google.firebase.ml.vision.common.FirebaseVisionImage;
+import com.google.firebase.ml.vision.common.FirebaseVisionImageMetadata;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.util.Arrays;
+import java.util.List;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
 
 public class Camera extends AppCompatActivity {
 
     private CameraKitView cameraKitView;
-    private static final int REQUEST_LOCATION = 1;
     private Button captureBtn;
     private FusedLocationProviderClient fusedLocationClient;
     private static final int PLAY_SERVICES_RESOLUTION_REQUEST = 9000;
     private LocationRequest locationRequest;
     private static final long UPDATE_INTERVAL = 1000, FASTEST_INTERVAL = 1000;
     private String lat, lon;
-    private static boolean UpdateBegan = false;
+
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -67,6 +87,7 @@ public class Camera extends AppCompatActivity {
             buildAlertMessageNoGps();
             return;
         }
+
 
 
         captureBtn.setOnClickListener(new View.OnClickListener() {
@@ -90,7 +111,7 @@ public class Camera extends AppCompatActivity {
                                 if (location != null) {
                                     lat = String.valueOf(location.getLatitude());
                                     lon = String.valueOf(location.getLongitude());
-                                    Toast.makeText(Camera.this, lat + " Last " + lon, Toast.LENGTH_SHORT).show();
+                                    /*Toast.makeText(Camera.this, lat + " Last " + lon, Toast.LENGTH_SHORT).show();*/
                                 }
                             }
                         });
@@ -100,12 +121,19 @@ public class Camera extends AppCompatActivity {
                 cameraKitView.captureImage(new CameraKitView.ImageCallback() {
                     @Override
                     public void onImage(CameraKitView cameraKitView, final byte[] capturedImage) {
-                        // capturedImage contains the image from the CameraKitView.
                         File savedPhoto = new File(Environment.getExternalStorageDirectory(), "lastImage.jpg");
                         try {
                             FileOutputStream outputStream = new FileOutputStream(savedPhoto.getPath());
                             outputStream.write(capturedImage);
                             outputStream.close();
+
+                            FirebaseVisionImage image;
+                            try {
+                                image = FirebaseVisionImage.fromFilePath(getApplicationContext(), Uri.fromFile(savedPhoto));
+                                scanBarcodes(image);
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
 
                         } catch (java.io.IOException e) {
                             e.printStackTrace();
@@ -237,10 +265,71 @@ private void RequestPermission(){
                 for (Location location : locationResult.getLocations()) {
                     lat = String.valueOf(location.getLatitude());
                     lon = String.valueOf(location.getLongitude());
-                    Toast.makeText(Camera.this, lat + " Update " + lon, Toast.LENGTH_LONG).show();
+                   /* Toast.makeText(Camera.this, lat + " Update " + lon, Toast.LENGTH_LONG).show();*/
                 }
             };
 
         },null);
     }
+
+    private void scanBarcodes(FirebaseVisionImage image) {
+        // [START set_detector_options]
+        FirebaseVisionBarcodeDetectorOptions options =
+                new FirebaseVisionBarcodeDetectorOptions.Builder()
+                        .setBarcodeFormats(
+                                FirebaseVisionBarcode.FORMAT_QR_CODE)
+                        .build();
+
+        FirebaseVisionBarcodeDetector detector = FirebaseVision.getInstance()
+                .getVisionBarcodeDetector(options);
+
+        Task<List<FirebaseVisionBarcode>> result = detector.detectInImage(image)
+                .addOnSuccessListener(new OnSuccessListener<List<FirebaseVisionBarcode>>() {
+                    @Override
+                    public void onSuccess(List<FirebaseVisionBarcode> barcodes) {
+
+                        for (FirebaseVisionBarcode barcode: barcodes) {
+                            Rect bounds = barcode.getBoundingBox();
+                            Point[] corners = barcode.getCornerPoints();
+
+                            String rawValue = barcode.getRawValue();
+                            Toast.makeText(Camera.this, rawValue, Toast.LENGTH_LONG).show();
+
+                            int valueType = barcode.getValueType();
+                            // See API reference for complete list of supported types
+                            switch (valueType) {
+                                case FirebaseVisionBarcode.TYPE_WIFI:
+                                    String ssid = barcode.getWifi().getSsid();
+                                    String password = barcode.getWifi().getPassword();
+                                    int type = barcode.getWifi().getEncryptionType();
+                                    break;
+                                case FirebaseVisionBarcode.TYPE_URL:
+                                    String title = barcode.getUrl().getTitle();
+                                    String url = barcode.getUrl().getUrl();
+                                    break;
+                                case FirebaseVisionBarcode.FORMAT_ALL_FORMATS:
+                                    String text = barcode.getDisplayValue();
+
+                            }
+                        }
+                        // [END get_barcodes]
+                        // [END_EXCLUDE]
+                    }
+                })
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        // Task failed with an exception
+                        // ...
+                        Toast.makeText(Camera.this, "Alinmir", Toast.LENGTH_LONG).show();
+
+                    }
+                });
+        // [END run_detector]
+    }
+
+
+
+
+
 }
