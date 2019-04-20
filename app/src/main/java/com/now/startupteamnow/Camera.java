@@ -2,25 +2,17 @@ package com.now.startupteamnow;
 
 
 import android.Manifest;
-import android.app.Activity;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Point;
 import android.graphics.Rect;
-import android.hardware.camera2.CameraAccessException;
-import android.hardware.camera2.CameraCharacteristics;
-import android.hardware.camera2.CameraManager;
 import android.location.Location;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.Settings;
-import android.util.Log;
-import android.util.SparseIntArray;
-import android.view.Surface;
 import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
@@ -41,17 +33,13 @@ import com.google.firebase.ml.vision.barcode.FirebaseVisionBarcode;
 import com.google.firebase.ml.vision.barcode.FirebaseVisionBarcodeDetector;
 import com.google.firebase.ml.vision.barcode.FirebaseVisionBarcodeDetectorOptions;
 import com.google.firebase.ml.vision.common.FirebaseVisionImage;
-import com.google.firebase.ml.vision.common.FirebaseVisionImageMetadata;
 
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.util.Arrays;
 import java.util.List;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
@@ -66,17 +54,13 @@ public class Camera extends AppCompatActivity {
     private static final long UPDATE_INTERVAL = 1000, FASTEST_INTERVAL = 1000;
     private String lat, lon;
 
-
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_camera);
         cameraKitView = findViewById(R.id.camera);
         captureBtn = findViewById(R.id.button);
-
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
-
 
         if(!checkPlayServices()){
             buildAlertMessageNoGoogleService();
@@ -176,14 +160,15 @@ private void RequestPermission(){
 
     @Override
     protected void onPause() {
-        cameraKitView.onPause();
         super.onPause();
+        cameraKitView.onPause();
+
     }
 
     @Override
     protected void onStop() {
-        cameraKitView.onStop();
         super.onStop();
+        cameraKitView.onStop();
     }
 
     @Override

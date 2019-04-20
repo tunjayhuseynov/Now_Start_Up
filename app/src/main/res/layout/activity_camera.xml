@@ -6,6 +6,8 @@
     android:layout_height="match_parent"
     tools:context=".Camera">
 
+
+
     <com.camerakit.CameraKitView
         android:id="@+id/camera"
         android:layout_width="match_parent"
@@ -13,7 +15,6 @@
         android:adjustViewBounds="false"
         android:keepScreenOn="true"
         app:camera_facing="back"
-        app:camera_flash="off"
         app:camera_focus="continuous"
         app:camera_permissions="camera|storage" >
 
@@ -23,6 +24,8 @@
             android:layout_height="wrap_content"
             android:layout_gravity="bottom|center_horizontal"
             android:text="Button" />
+
     </com.camerakit.CameraKitView>
+
 
 </androidx.constraintlayout.widget.ConstraintLayout>

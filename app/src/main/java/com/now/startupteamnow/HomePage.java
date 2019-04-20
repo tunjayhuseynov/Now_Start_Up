@@ -35,7 +35,7 @@ public class HomePage extends AppCompatActivity {
 
                 return true;
             case R.id.camera:
-                Intent intent = new Intent(this, Camera.class);
+                Intent intent = new Intent(this, NativeCamera.class);
                 this.startActivity(intent);
 
                 return true;
