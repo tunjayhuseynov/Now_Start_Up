@@ -1,13 +1,19 @@
 package com.now.startupteamnow;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 
 import android.Manifest;
 import android.content.Context;
+import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.ImageFormat;
+import android.graphics.Point;
+import android.graphics.Rect;
 import android.graphics.SurfaceTexture;
 import android.hardware.camera2.CameraAccessException;
 import android.hardware.camera2.CameraCaptureSession;
@@ -18,20 +24,40 @@ import android.hardware.camera2.CameraMetadata;
 import android.hardware.camera2.CaptureRequest;
 import android.hardware.camera2.TotalCaptureResult;
 import android.hardware.camera2.params.StreamConfigurationMap;
+import android.location.Location;
 import android.media.Image;
 import android.media.ImageReader;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.HandlerThread;
+import android.provider.Settings;
 import android.util.Log;
 import android.util.Size;
 import android.util.SparseIntArray;
+import android.view.MotionEvent;
 import android.view.Surface;
 import android.view.TextureView;
 import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
+
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.GoogleApiAvailability;
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationCallback;
+import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationResult;
+import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.ml.vision.FirebaseVision;
+import com.google.firebase.ml.vision.barcode.FirebaseVisionBarcode;
+import com.google.firebase.ml.vision.barcode.FirebaseVisionBarcodeDetector;
+import com.google.firebase.ml.vision.barcode.FirebaseVisionBarcodeDetectorOptions;
+import com.google.firebase.ml.vision.common.FirebaseVisionImage;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -42,10 +68,16 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 
 public class NativeCamera extends AppCompatActivity {
-    private static final String TAG = "AndroidCameraApi";
 
+    private static final String TAG = "AndroidCameraApi";
+    private FusedLocationProviderClient fusedLocationClient;
+    private static final int PLAY_SERVICES_RESOLUTION_REQUEST = 9000;
+    private LocationRequest locationRequest;
+    private static final long UPDATE_INTERVAL = 1000, FASTEST_INTERVAL = 1000;
+    private String lat, lon;
     private TextureView textureView;
     private static final SparseIntArray ORIENTATIONS = new SparseIntArray();
     static {
@@ -55,13 +87,18 @@ public class NativeCamera extends AppCompatActivity {
         ORIENTATIONS.append(Surface.ROTATION_270, 180);
     }
     private String cameraId;
+    protected CameraCharacteristics cameraCharacteristics;
+    protected float fingerSpacing = 0;
+    protected float zoomLevel = 1f;
+    protected float maximumZoomLevel;
+    protected Rect zoom;
     protected CameraDevice cameraDevice;
     protected CameraCaptureSession cameraCaptureSessions;
     protected CaptureRequest captureRequest;
     protected CaptureRequest.Builder captureRequestBuilder;
     private Size imageDimension;
     private ImageReader imageReader;
-    private File file;
+
     private static final int REQUEST_CAMERA_PERMISSION = 200;
     private boolean mFlashSupported;
     private Handler mBackgroundHandler;
@@ -76,15 +113,54 @@ public class NativeCamera extends AppCompatActivity {
         textureView = (TextureView) findViewById(R.id.texture_view);
         assert textureView != null;
         textureView.setSurfaceTextureListener(textureListener);
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
+
+
+
+
+
+        if(!checkPlayServices()){
+            buildAlertMessageNoGoogleService();
+            return;
+        }
+
+        if (!isLocationEnabled(NativeCamera.this)){
+            buildAlertMessageNoGps();
+            return;
+        }
 
         takePic.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                if (ActivityCompat.checkSelfPermission(NativeCamera.this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                    RequestPermission();
+                    return;
+                }
+
+                fusedLocationClient.getLastLocation()
+                        .addOnSuccessListener(NativeCamera.this, new OnSuccessListener<Location>() {
+                            @Override
+                            public void onSuccess(Location location) {
+                                // Got last known location. In some rare situations this can be null.
+                                if (location != null) {
+                                    lat = String.valueOf(location.getLatitude());
+                                    lon = String.valueOf(location.getLongitude());
+                                    /*Toast.makeText(Camera.this, lat + " Last " + lon, Toast.LENGTH_SHORT).show();*/
+                                }
+                            }
+                        });
+
                 takePicture();
+
             }
         });
 
 
+    }
+
+
+    private void RequestPermission(){
+        ActivityCompat.requestPermissions(NativeCamera.this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION},1);
     }
 
     TextureView.SurfaceTextureListener textureListener = new TextureView.SurfaceTextureListener() {
@@ -128,7 +204,7 @@ public class NativeCamera extends AppCompatActivity {
         @Override
         public void onCaptureCompleted(CameraCaptureSession session, CaptureRequest request, TotalCaptureResult result) {
             super.onCaptureCompleted(session, request, result);
-            Toast.makeText(NativeCamera.this, "Saved:" + file, Toast.LENGTH_SHORT).show();
+           // Toast.makeText(NativeCamera.this, "Saved:" + file, Toast.LENGTH_SHORT).show();
             createCameraPreview();
         }
     };
@@ -157,7 +233,7 @@ public class NativeCamera extends AppCompatActivity {
             CameraCharacteristics characteristics = manager.getCameraCharacteristics(cameraDevice.getId());
             Size[] jpegSizes = null;
             if (characteristics != null) {
-                jpegSizes = characteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP).getOutputSizes(ImageFormat.JPEG);
+                jpegSizes = Objects.requireNonNull(characteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP)).getOutputSizes(ImageFormat.JPEG);
             }
             int width = 640;
             int height = 480;
@@ -175,7 +251,10 @@ public class NativeCamera extends AppCompatActivity {
             // Orientation
             int rotation = getWindowManager().getDefaultDisplay().getRotation();
             captureBuilder.set(CaptureRequest.JPEG_ORIENTATION, ORIENTATIONS.get(rotation));
-            final File file = new File(Environment.getExternalStorageDirectory()+"/pic.jpg");
+            if (zoom != null) {
+                captureBuilder.set(CaptureRequest.SCALER_CROP_REGION, zoom);
+            }
+            final File file = new File(Environment.getExternalStorageDirectory()+"/NowImage/pic.jpg");
             ImageReader.OnImageAvailableListener readerListener = new ImageReader.OnImageAvailableListener() {
                 @Override
                 public void onImageAvailable(ImageReader reader) {
@@ -201,6 +280,13 @@ public class NativeCamera extends AppCompatActivity {
                     try {
                         output = new FileOutputStream(file);
                         output.write(bytes);
+                        FirebaseVisionImage image;
+                        try {
+                            image = FirebaseVisionImage.fromFilePath(getApplicationContext(), Uri.fromFile(file));
+                            scanBarcodes(image);
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
                     } finally {
                         if (null != output) {
                             output.close();
@@ -213,7 +299,7 @@ public class NativeCamera extends AppCompatActivity {
                 @Override
                 public void onCaptureCompleted(CameraCaptureSession session, CaptureRequest request, TotalCaptureResult result) {
                     super.onCaptureCompleted(session, request, result);
-                    Toast.makeText(NativeCamera.this, "Saved:" + file, Toast.LENGTH_SHORT).show();
+                    //Toast.makeText(NativeCamera.this, "Saved:" + file, Toast.LENGTH_SHORT).show();
                     createCameraPreview();
                 }
             };
@@ -221,7 +307,7 @@ public class NativeCamera extends AppCompatActivity {
                 @Override
                 public void onConfigured(CameraCaptureSession session) {
                     try {
-                        session.capture(captureBuilder.build(), captureListener, mBackgroundHandler);
+                        session.capture(captureBuilder.build(), captureCallbackListener, mBackgroundHandler);
                     } catch (CameraAccessException e) {
                         e.printStackTrace();
                     }
@@ -272,8 +358,9 @@ public class NativeCamera extends AppCompatActivity {
             assert map != null;
             imageDimension = map.getOutputSizes(SurfaceTexture.class)[0];
             // Add permission for camera and let user grant the permission
-            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-                ActivityCompat.requestPermissions(NativeCamera.this, new String[]{Manifest.permission.CAMERA, Manifest.permission.WRITE_EXTERNAL_STORAGE}, REQUEST_CAMERA_PERMISSION);
+            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED || ActivityCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED || ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                Toast.makeText(NativeCamera.this, "Zəhmət Olmasa İcazələri Təsdiq Edin", Toast.LENGTH_SHORT).show();
+                ActivityCompat.requestPermissions(NativeCamera.this, new String[]{Manifest.permission.CAMERA, Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.ACCESS_FINE_LOCATION}, REQUEST_CAMERA_PERMISSION);
                 return;
             }
             manager.openCamera(cameraId, stateCallback, null);
@@ -308,7 +395,7 @@ public class NativeCamera extends AppCompatActivity {
         if (requestCode == REQUEST_CAMERA_PERMISSION) {
             if (grantResults[0] == PackageManager.PERMISSION_DENIED) {
                 // close the app
-                Toast.makeText(NativeCamera.this, "Sorry!!!, you can't use this app without granting permission", Toast.LENGTH_LONG).show();
+                Toast.makeText(NativeCamera.this, "Zəhmət Olmasa İcazələri Təsdiq Edin", Toast.LENGTH_LONG).show();
                 finish();
             }
         }
@@ -323,6 +410,9 @@ public class NativeCamera extends AppCompatActivity {
         } else {
             textureView.setSurfaceTextureListener(textureListener);
         }
+        if(isLocationEnabled(NativeCamera.this)){
+            startLocationUpdates();
+        }
     }
     @Override
     protected void onPause() {
@@ -330,5 +420,221 @@ public class NativeCamera extends AppCompatActivity {
         //closeCamera();
         stopBackgroundThread();
         super.onPause();
+    }
+
+
+    protected void buildAlertMessageNoGps() {
+
+        final AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setMessage("Zəhmət olmasa GPS xidmətini aktiv edəsiniz")
+                .setCancelable(false)
+                .setPositiveButton("Yaxşı", new DialogInterface.OnClickListener() {
+                    public void onClick(final DialogInterface dialog, final int id) {
+                        startActivity(new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS));
+                    }
+                })
+                .setNegativeButton("Xeyr", new DialogInterface.OnClickListener() {
+                    public void onClick(final DialogInterface dialog, final int id) {
+                        Intent intent = new Intent(NativeCamera.this, HomePage.class);
+                        startActivity(intent);
+                        dialog.cancel();
+                    }
+                });
+        final AlertDialog alert = builder.create();
+        alert.show();
+    }
+
+    protected void buildAlertMessageNoGoogleService() {
+
+        final AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setMessage("Zəhmət olmasa Google Play Service yükləyib aktiv edəsiniz")
+                .setCancelable(false)
+                .setPositiveButton("Yaxşı", new DialogInterface.OnClickListener() {
+                    public void onClick(final DialogInterface dialog, final int id) {
+                        Intent intent = new Intent(NativeCamera.this, HomePage.class);
+                        startActivity(intent);
+                    }
+                });
+        final AlertDialog alert = builder.create();
+        alert.show();
+    }
+
+    private boolean checkPlayServices() {
+        GoogleApiAvailability apiAvailability = GoogleApiAvailability.getInstance();
+        int resultCode = apiAvailability.isGooglePlayServicesAvailable(this);
+
+        if (resultCode != ConnectionResult.SUCCESS) {
+            if (apiAvailability.isUserResolvableError(resultCode)) {
+                apiAvailability.getErrorDialog(this, resultCode, PLAY_SERVICES_RESOLUTION_REQUEST);
+            } else {
+                finish();
+            }
+
+            return false;
+        }
+
+        return true;
+    }
+
+    private void startLocationUpdates() {
+        locationRequest = new LocationRequest();
+        locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+        locationRequest.setInterval(UPDATE_INTERVAL);
+        locationRequest.setFastestInterval(FASTEST_INTERVAL);
+
+        if (ActivityCompat.checkSelfPermission(this,
+                Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            Toast.makeText(this, "Zəhmət Olmasa İcazələri Təsdiq Edin!", Toast.LENGTH_LONG).show();
+        }
+        fusedLocationClient.requestLocationUpdates(locationRequest, new LocationCallback(){
+
+            @Override
+            public void onLocationResult(LocationResult locationResult) {
+                if (locationResult == null) {
+                    return;
+                }
+                for (Location location : locationResult.getLocations()) {
+                    lat = String.valueOf(location.getLatitude());
+                    lon = String.valueOf(location.getLongitude());
+                     /*Toast.makeText(NativeCamera.this, lat + " Update " + lon, Toast.LENGTH_LONG).show();*/
+                }
+            };
+
+        },null);
+    }
+
+    private void scanBarcodes(FirebaseVisionImage image) {
+        // [START set_detector_options]
+        FirebaseVisionBarcodeDetectorOptions options =
+                new FirebaseVisionBarcodeDetectorOptions.Builder()
+                        .setBarcodeFormats(
+                                FirebaseVisionBarcode.FORMAT_QR_CODE)
+                        .build();
+
+        FirebaseVisionBarcodeDetector detector = FirebaseVision.getInstance()
+                .getVisionBarcodeDetector(options);
+
+        Task<List<FirebaseVisionBarcode>> result = detector.detectInImage(image)
+                .addOnSuccessListener(new OnSuccessListener<List<FirebaseVisionBarcode>>() {
+                    @Override
+                    public void onSuccess(List<FirebaseVisionBarcode> barcodes) {
+
+                        for (FirebaseVisionBarcode barcode: barcodes) {
+                            Rect bounds = barcode.getBoundingBox();
+                            Point[] corners = barcode.getCornerPoints();
+
+                            String rawValue = barcode.getRawValue();
+
+                            Toast.makeText(NativeCamera.this, rawValue, Toast.LENGTH_LONG).show();
+
+                            int valueType = barcode.getValueType();
+                            // See API reference for complete list of supported types
+                            switch (valueType) {
+                                case FirebaseVisionBarcode.TYPE_WIFI:
+                                    String ssid = barcode.getWifi().getSsid();
+                                    String password = barcode.getWifi().getPassword();
+                                    int type = barcode.getWifi().getEncryptionType();
+                                    break;
+                                case FirebaseVisionBarcode.TYPE_URL:
+                                    String title = barcode.getUrl().getTitle();
+                                    String url = barcode.getUrl().getUrl();
+                                    break;
+                                case FirebaseVisionBarcode.FORMAT_ALL_FORMATS:
+                                    String text = barcode.getDisplayValue();
+
+                            }
+                        }
+
+                        File output = new File(Environment.getExternalStorageDirectory()+"/NowImage/pic.jpg");
+                        if (output.exists()) {
+                            if (output.delete()) {
+                               // Toast.makeText(NativeCamera.this, "Silindi", Toast.LENGTH_LONG).show();
+                                zoomLevel = 1f;
+                            } else {
+                               // Toast.makeText(NativeCamera.this, "Silin MEDI", Toast.LENGTH_LONG).show();
+                            }
+                        }
+                        // [END get_barcodes]
+                        // [END_EXCLUDE]
+                    }
+                })
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        // Task failed with an exception
+                        // ...
+                        Toast.makeText(NativeCamera.this, "Alinmir", Toast.LENGTH_LONG).show();
+
+                    }
+                });
+        // [END run_detector]
+    }
+
+    public static boolean isLocationEnabled(Context context) {
+        return getLocationMode(context) != Settings.Secure.LOCATION_MODE_OFF;
+    }
+
+    private static int getLocationMode(Context context) {
+        return Settings.Secure.getInt(context.getContentResolver(), Settings.Secure.LOCATION_MODE, Settings.Secure.LOCATION_MODE_OFF);
+    }
+
+    @Override
+    public boolean onTouchEvent(MotionEvent event) {
+        CameraManager manager = (CameraManager) getSystemService(Context.CAMERA_SERVICE);
+
+        try {
+            Rect rect = null;
+            CameraCharacteristics characteristics = manager.getCameraCharacteristics(cameraDevice.getId());
+            if(characteristics != null){
+                maximumZoomLevel = characteristics.get(CameraCharacteristics.SCALER_AVAILABLE_MAX_DIGITAL_ZOOM);
+
+                rect = characteristics.get(CameraCharacteristics.SENSOR_INFO_ACTIVE_ARRAY_SIZE);
+                if (rect == null) return false;
+            }
+
+
+            float currentFingerSpacing;
+
+            if (event.getPointerCount() == 2) { //Multi touch.
+                currentFingerSpacing = getFingerSpacing(event);
+                float delta = 0.05f; //Control this value to control the zooming sensibility
+                if (fingerSpacing != 0) {
+                    if (currentFingerSpacing > fingerSpacing) { //Don't over zoom-in
+                        if ((maximumZoomLevel - zoomLevel) <= delta) {
+                            delta = maximumZoomLevel - zoomLevel;
+                        }
+                        zoomLevel = zoomLevel + delta;
+                    } else if (currentFingerSpacing < fingerSpacing){ //Don't over zoom-out
+                        if ((zoomLevel - delta) < 1f) {
+                            delta = zoomLevel - 1f;
+                        }
+                        zoomLevel = zoomLevel - delta;
+                    }
+                    float ratio = (float) 1 / zoomLevel; //This ratio is the ratio of cropped Rect to Camera's original(Maximum) Rect
+                    //croppedWidth and croppedHeight are the pixels cropped away, not pixels after cropped
+                    int croppedWidth = rect.width() - Math.round((float)rect.width() * ratio);
+                    int croppedHeight = rect.height() - Math.round((float)rect.height() * ratio);
+                    //Finally, zoom represents the zoomed visible area
+                    zoom = new Rect(croppedWidth/2, croppedHeight/2,
+                            rect.width() - croppedWidth/2, rect.height() - croppedHeight/2);
+                    captureRequestBuilder.set(CaptureRequest.SCALER_CROP_REGION, zoom);
+                }
+                fingerSpacing = currentFingerSpacing;
+            } else { //Single touch point, needs to return true in order to detect one more touch point
+                return true;
+            }
+
+            cameraCaptureSessions.setRepeatingRequest(captureRequestBuilder.build(), null, mBackgroundHandler);
+            return true;
+        } catch (final Exception e) {
+            Toast.makeText(NativeCamera.this, e.toString(), Toast.LENGTH_SHORT).show();
+            return true;
+        }
+    }
+
+    private float getFingerSpacing(MotionEvent event) {
+        float x = event.getX(0) - event.getX(1);
+        float y = event.getY(0) - event.getY(1);
+        return (float) Math.sqrt(x * x + y * y);
     }
 }

@@ -313,8 +313,4 @@ private void RequestPermission(){
         // [END run_detector]
     }
 
-
-
-
-
 }
