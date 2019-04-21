@@ -118,6 +118,8 @@ public class NativeCamera extends AppCompatActivity {
     private Button flashbtn;
     private String valueofcode;
 
+    private int divided = 30;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -153,8 +155,13 @@ public class NativeCamera extends AppCompatActivity {
         flashbtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                switchFlash();
-                setupFlashButton();
+                if(isTorchOn){
+                    isTorchOn = false;
+                    flashbtn.setText("OFF");
+                }else{
+                    isTorchOn = true;
+                    flashbtn.setText("ON");
+                }
             }
         });
 
@@ -221,16 +228,16 @@ public class NativeCamera extends AppCompatActivity {
             //This is called when the camera is open
             Log.e(TAG, "onOpened");
             cameraDevice = camera;
+            CameraManager manager = (CameraManager) getSystemService(Context.CAMERA_SERVICE);
+
             createCameraPreview();
 
 
-            CameraManager manager = (CameraManager) getSystemService(Context.CAMERA_SERVICE);
             try {
                 CameraCharacteristics characteristics = manager.getCameraCharacteristics(cameraDevice.getId());
                 Boolean available = characteristics.get(CameraCharacteristics.FLASH_INFO_AVAILABLE);
                 isFlashSupported = available == null ? false : available;
 
-                setupFlashButton();
             }catch (Exception e){ Toast.makeText(NativeCamera.this, e.toString(), Toast.LENGTH_SHORT).show();}
         }
         @Override
@@ -266,12 +273,14 @@ public class NativeCamera extends AppCompatActivity {
             e.printStackTrace();
         }
     }
+
     protected void takePicture() {
         if(null == cameraDevice) {
             Log.e(TAG, "cameraDevice is null");
             return;
         }
         CameraManager manager = (CameraManager) getSystemService(Context.CAMERA_SERVICE);
+
         try {
             CameraCharacteristics characteristics = manager.getCameraCharacteristics(cameraDevice.getId());
             Size[] jpegSizes = null;
@@ -284,13 +293,20 @@ public class NativeCamera extends AppCompatActivity {
                 width = jpegSizes[0].getWidth();
                 height = jpegSizes[0].getHeight();
             }
-            ImageReader reader = ImageReader.newInstance(width/50, height/50, ImageFormat.JPEG, 1);
+            ImageReader reader = ImageReader.newInstance(width/divided, height/divided, ImageFormat.JPEG, 1);
             List<Surface> outputSurfaces = new ArrayList<Surface>(2);
             outputSurfaces.add(reader.getSurface());
             outputSurfaces.add(new Surface(textureView.getSurfaceTexture()));
             final CaptureRequest.Builder captureBuilder = cameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_STILL_CAPTURE);
             captureBuilder.addTarget(reader.getSurface());
             captureBuilder.set(CaptureRequest.CONTROL_MODE, CameraMetadata.CONTROL_MODE_AUTO);
+            if(isTorchOn){
+                captureBuilder.set(CaptureRequest.CONTROL_AE_MODE, CameraMetadata.CONTROL_AF_MODE_AUTO);
+                captureBuilder.set(CaptureRequest.FLASH_MODE, CameraMetadata.FLASH_MODE_TORCH);
+            }else{
+                captureBuilder.set(CaptureRequest.CONTROL_AE_MODE, CameraMetadata.CONTROL_AF_MODE_AUTO);
+                captureBuilder.set(CaptureRequest.FLASH_MODE, CameraMetadata.FLASH_MODE_OFF);
+            }
             // Orientation
             int rotation = getWindowManager().getDefaultDisplay().getRotation();
             captureBuilder.set(CaptureRequest.JPEG_ORIENTATION, ORIENTATIONS.get(rotation));
@@ -361,7 +377,7 @@ public class NativeCamera extends AppCompatActivity {
                 }
             }, mBackgroundHandler);
         } catch (CameraAccessException e) {
-            e.printStackTrace();
+            Toast.makeText(NativeCamera.this, e.toString(), Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -699,79 +715,5 @@ public class NativeCamera extends AppCompatActivity {
     }
 
 
-    public void switchFlash() {
-        try {
-            if (cameraId.equals("0")) {
-                if (isFlashSupported) {
-                    if (isTorchOn) {
-                        captureRequestBuilder.set(CaptureRequest.FLASH_MODE, CaptureRequest.FLASH_MODE_OFF);
-                        cameraCaptureSessions.setRepeatingRequest(captureRequestBuilder.build(), null, null);
-                        isTorchOn = false;
-                    } else {
-                        captureRequestBuilder.set(CaptureRequest.FLASH_MODE, CaptureRequest.FLASH_MODE_TORCH);
-                        cameraCaptureSessions.setRepeatingRequest(captureRequestBuilder.build(), null, null);
 
-                        isTorchOn = true;
-                    }
-                }
-            }
-        } catch (CameraAccessException e) {
-            e.printStackTrace();
-        }
-    }
-
-    public void setupFlashButton() {
-        if (camera2Id.equals(CAMERA_BACK) && isFlashSupported) {
-
-
-            if (isTorchOn) {
-                flashbtn.setText("ON");
-            } else {
-                flashbtn.setText("OFF");
-            }
-
-        } else {
-            flashbtn.setVisibility(View.GONE);
-        }
-    }
-
-    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
-    private int getRotationCompensation(String cameraId, Activity activity, Context context)
-            throws CameraAccessException {
-        // Get the device's current rotation relative to its "native" orientation.
-        // Then, from the ORIENTATIONS table, look up the angle the image must be
-        // rotated to compensate for the device's rotation.
-        int deviceRotation = activity.getWindowManager().getDefaultDisplay().getRotation();
-        int rotationCompensation = ORIENTATIONS.get(deviceRotation);
-
-        // On most devices, the sensor orientation is 90 degrees, but for some
-        // devices it is 270 degrees. For devices with a sensor orientation of
-        // 270, rotate the image an additional 180 ((270 + 270) % 360) degrees.
-        CameraManager cameraManager = (CameraManager) context.getSystemService(CAMERA_SERVICE);
-        int sensorOrientation = cameraManager
-                .getCameraCharacteristics(cameraId)
-                .get(CameraCharacteristics.SENSOR_ORIENTATION);
-        rotationCompensation = (rotationCompensation + sensorOrientation + 270) % 360;
-
-        // Return the corresponding FirebaseVisionImageMetadata rotation value.
-        int result;
-        switch (rotationCompensation) {
-            case 0:
-                result = FirebaseVisionImageMetadata.ROTATION_0;
-                break;
-            case 90:
-                result = FirebaseVisionImageMetadata.ROTATION_90;
-                break;
-            case 180:
-                result = FirebaseVisionImageMetadata.ROTATION_180;
-                break;
-            case 270:
-                result = FirebaseVisionImageMetadata.ROTATION_270;
-                break;
-            default:
-                result = FirebaseVisionImageMetadata.ROTATION_0;
-                Log.e(TAG, "Bad rotation value: " + rotationCompensation);
-        }
-        return result;
-    }
 }
