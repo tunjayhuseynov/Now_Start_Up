@@ -8,6 +8,7 @@
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+
     <uses-feature android:name="android.hardware.camera2.full" />
 
     <application
@@ -26,7 +27,8 @@
             </intent-filter>
         </activity>
         <activity android:name=".Camera" />
-        <activity android:name=".NativeCamera"></activity>
+        <activity android:name=".NativeCamera" />
+        <activity android:name=".Check"></activity>
     </application>
 
 </manifest>

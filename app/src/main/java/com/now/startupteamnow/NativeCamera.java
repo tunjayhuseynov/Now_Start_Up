@@ -1,16 +1,20 @@
 package com.now.startupteamnow;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
 import android.Manifest;
+import android.app.Activity;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.ImageFormat;
 import android.graphics.Point;
 import android.graphics.Rect;
@@ -28,6 +32,7 @@ import android.location.Location;
 import android.media.Image;
 import android.media.ImageReader;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
@@ -58,6 +63,7 @@ import com.google.firebase.ml.vision.barcode.FirebaseVisionBarcode;
 import com.google.firebase.ml.vision.barcode.FirebaseVisionBarcodeDetector;
 import com.google.firebase.ml.vision.barcode.FirebaseVisionBarcodeDetectorOptions;
 import com.google.firebase.ml.vision.common.FirebaseVisionImage;
+import com.google.firebase.ml.vision.common.FirebaseVisionImageMetadata;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -104,6 +110,14 @@ public class NativeCamera extends AppCompatActivity {
     private Handler mBackgroundHandler;
     private HandlerThread mBackgroundThread;
     private Button takePic;
+    public static final String CAMERA_BACK = "0";
+
+    private String camera2Id = CAMERA_BACK;
+    private boolean isFlashSupported;
+    private boolean isTorchOn = false;
+    private Button flashbtn;
+    private String valueofcode;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -114,10 +128,17 @@ public class NativeCamera extends AppCompatActivity {
         assert textureView != null;
         textureView.setSurfaceTextureListener(textureListener);
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
+        flashbtn = (Button) findViewById(R.id.button2);
 
 
-
-
+        File output = new File(Environment.getExternalStorageDirectory()+"/NowImage/pic.jpg");
+        if (output.exists()) {
+            if (output.delete()) {
+                 Toast.makeText(NativeCamera.this, "Silindi", Toast.LENGTH_SHORT).show();
+            } else {
+                // Toast.makeText(NativeCamera.this, "Silin MEDI", Toast.LENGTH_LONG).show();
+            }
+        }
 
         if(!checkPlayServices()){
             buildAlertMessageNoGoogleService();
@@ -128,6 +149,14 @@ public class NativeCamera extends AppCompatActivity {
             buildAlertMessageNoGps();
             return;
         }
+
+        flashbtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                switchFlash();
+                setupFlashButton();
+            }
+        });
 
         takePic.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -150,8 +179,12 @@ public class NativeCamera extends AppCompatActivity {
                             }
                         });
 
+
+
                 takePicture();
 
+                zoomLevel = 1f;
+                zoom = null;
             }
         });
 
@@ -189,6 +222,16 @@ public class NativeCamera extends AppCompatActivity {
             Log.e(TAG, "onOpened");
             cameraDevice = camera;
             createCameraPreview();
+
+
+            CameraManager manager = (CameraManager) getSystemService(Context.CAMERA_SERVICE);
+            try {
+                CameraCharacteristics characteristics = manager.getCameraCharacteristics(cameraDevice.getId());
+                Boolean available = characteristics.get(CameraCharacteristics.FLASH_INFO_AVAILABLE);
+                isFlashSupported = available == null ? false : available;
+
+                setupFlashButton();
+            }catch (Exception e){ Toast.makeText(NativeCamera.this, e.toString(), Toast.LENGTH_SHORT).show();}
         }
         @Override
         public void onDisconnected(CameraDevice camera) {
@@ -241,7 +284,7 @@ public class NativeCamera extends AppCompatActivity {
                 width = jpegSizes[0].getWidth();
                 height = jpegSizes[0].getHeight();
             }
-            ImageReader reader = ImageReader.newInstance(width, height, ImageFormat.JPEG, 1);
+            ImageReader reader = ImageReader.newInstance(width/50, height/50, ImageFormat.JPEG, 1);
             List<Surface> outputSurfaces = new ArrayList<Surface>(2);
             outputSurfaces.add(reader.getSurface());
             outputSurfaces.add(new Surface(textureView.getSurfaceTexture()));
@@ -265,9 +308,10 @@ public class NativeCamera extends AppCompatActivity {
                         byte[] bytes = new byte[buffer.capacity()];
                         buffer.get(bytes);
                         save(bytes);
-                    } catch (FileNotFoundException e) {
-                        e.printStackTrace();
-                    } catch (IOException e) {
+                        /*Bitmap bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
+                        FirebaseVisionImage firebaseVisionImage = FirebaseVisionImage.fromBitmap(bitmap);
+                        scanBarcodes(firebaseVisionImage);*/
+                    } catch (Exception e) {
                         e.printStackTrace();
                     } finally {
                         if (image != null) {
@@ -284,7 +328,7 @@ public class NativeCamera extends AppCompatActivity {
                         try {
                             image = FirebaseVisionImage.fromFilePath(getApplicationContext(), Uri.fromFile(file));
                             scanBarcodes(image);
-                        } catch (IOException e) {
+                        } catch (Exception e) {
                             e.printStackTrace();
                         }
                     } finally {
@@ -320,6 +364,8 @@ public class NativeCamera extends AppCompatActivity {
             e.printStackTrace();
         }
     }
+
+
     protected void createCameraPreview() {
         try {
             SurfaceTexture texture = textureView.getSurfaceTexture();
@@ -519,15 +565,37 @@ public class NativeCamera extends AppCompatActivity {
                     @Override
                     public void onSuccess(List<FirebaseVisionBarcode> barcodes) {
 
+                        if(barcodes.size() == 0){
+                            Toast.makeText(NativeCamera.this, "Zəhmət Olmasa Qrafanın Daxilində Çəkin", Toast.LENGTH_LONG).show();
+                        }
+
                         for (FirebaseVisionBarcode barcode: barcodes) {
                             Rect bounds = barcode.getBoundingBox();
                             Point[] corners = barcode.getCornerPoints();
 
                             String rawValue = barcode.getRawValue();
-
+                            valueofcode = rawValue;
                             Toast.makeText(NativeCamera.this, rawValue, Toast.LENGTH_LONG).show();
 
                             int valueType = barcode.getValueType();
+
+                            File output = new File(Environment.getExternalStorageDirectory()+"/NowImage/pic.jpg");
+                            if (output.exists()) {
+                                if (output.delete()) {
+                                    // Toast.makeText(NativeCamera.this, "Silindi", Toast.LENGTH_LONG).show();
+
+                                    flashbtn.setText("OFF");
+                                    Bundle bundle = new Bundle();
+                                    bundle.putString("TextOfCode", valueofcode);
+                                    bundle.putString("Lat", lat);
+                                    bundle.putString("Lon", lon);
+                                    Intent intent = new Intent(NativeCamera.this, Check.class);
+                                    intent.putExtras(bundle);
+                                    startActivity(intent);
+                                } else {
+                                    // Toast.makeText(NativeCamera.this, "Silin MEDI", Toast.LENGTH_LONG).show();
+                                }
+                            }
                             // See API reference for complete list of supported types
                             switch (valueType) {
                                 case FirebaseVisionBarcode.TYPE_WIFI:
@@ -545,15 +613,7 @@ public class NativeCamera extends AppCompatActivity {
                             }
                         }
 
-                        File output = new File(Environment.getExternalStorageDirectory()+"/NowImage/pic.jpg");
-                        if (output.exists()) {
-                            if (output.delete()) {
-                               // Toast.makeText(NativeCamera.this, "Silindi", Toast.LENGTH_LONG).show();
-                                zoomLevel = 1f;
-                            } else {
-                               // Toast.makeText(NativeCamera.this, "Silin MEDI", Toast.LENGTH_LONG).show();
-                            }
-                        }
+
                         // [END get_barcodes]
                         // [END_EXCLUDE]
                     }
@@ -636,5 +696,82 @@ public class NativeCamera extends AppCompatActivity {
         float x = event.getX(0) - event.getX(1);
         float y = event.getY(0) - event.getY(1);
         return (float) Math.sqrt(x * x + y * y);
+    }
+
+
+    public void switchFlash() {
+        try {
+            if (cameraId.equals("0")) {
+                if (isFlashSupported) {
+                    if (isTorchOn) {
+                        captureRequestBuilder.set(CaptureRequest.FLASH_MODE, CaptureRequest.FLASH_MODE_OFF);
+                        cameraCaptureSessions.setRepeatingRequest(captureRequestBuilder.build(), null, null);
+                        isTorchOn = false;
+                    } else {
+                        captureRequestBuilder.set(CaptureRequest.FLASH_MODE, CaptureRequest.FLASH_MODE_TORCH);
+                        cameraCaptureSessions.setRepeatingRequest(captureRequestBuilder.build(), null, null);
+
+                        isTorchOn = true;
+                    }
+                }
+            }
+        } catch (CameraAccessException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void setupFlashButton() {
+        if (camera2Id.equals(CAMERA_BACK) && isFlashSupported) {
+
+
+            if (isTorchOn) {
+                flashbtn.setText("ON");
+            } else {
+                flashbtn.setText("OFF");
+            }
+
+        } else {
+            flashbtn.setVisibility(View.GONE);
+        }
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
+    private int getRotationCompensation(String cameraId, Activity activity, Context context)
+            throws CameraAccessException {
+        // Get the device's current rotation relative to its "native" orientation.
+        // Then, from the ORIENTATIONS table, look up the angle the image must be
+        // rotated to compensate for the device's rotation.
+        int deviceRotation = activity.getWindowManager().getDefaultDisplay().getRotation();
+        int rotationCompensation = ORIENTATIONS.get(deviceRotation);
+
+        // On most devices, the sensor orientation is 90 degrees, but for some
+        // devices it is 270 degrees. For devices with a sensor orientation of
+        // 270, rotate the image an additional 180 ((270 + 270) % 360) degrees.
+        CameraManager cameraManager = (CameraManager) context.getSystemService(CAMERA_SERVICE);
+        int sensorOrientation = cameraManager
+                .getCameraCharacteristics(cameraId)
+                .get(CameraCharacteristics.SENSOR_ORIENTATION);
+        rotationCompensation = (rotationCompensation + sensorOrientation + 270) % 360;
+
+        // Return the corresponding FirebaseVisionImageMetadata rotation value.
+        int result;
+        switch (rotationCompensation) {
+            case 0:
+                result = FirebaseVisionImageMetadata.ROTATION_0;
+                break;
+            case 90:
+                result = FirebaseVisionImageMetadata.ROTATION_90;
+                break;
+            case 180:
+                result = FirebaseVisionImageMetadata.ROTATION_180;
+                break;
+            case 270:
+                result = FirebaseVisionImageMetadata.ROTATION_270;
+                break;
+            default:
+                result = FirebaseVisionImageMetadata.ROTATION_0;
+                Log.e(TAG, "Bad rotation value: " + rotationCompensation);
+        }
+        return result;
     }
 }
