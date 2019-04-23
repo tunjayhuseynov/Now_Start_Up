@@ -1,7 +1,10 @@
 package com.now.startupteamnow;
 
 import android.content.ClipData;
+import android.content.Context;
 import android.content.Intent;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.os.Environment;
 import android.view.LayoutInflater;
@@ -43,6 +46,7 @@ public class HomePage extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home_page);
+        if(!isOnline()){ return;}
         String folder_main = "NowImage";
         File f = new File(Environment.getExternalStorageDirectory(), folder_main);
         if (!f.exists()) {
@@ -58,6 +62,16 @@ public class HomePage extends AppCompatActivity {
         tabLayout.setupWithViewPager(viewPager);
     }
 
+
+    public boolean isOnline() {
+        ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo netInfo = cm.getActiveNetworkInfo();
+        if (netInfo != null && netInfo.isConnectedOrConnecting()) {
+            return true;
+        } else {
+            return false;
+        }
+    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
