@@ -1,14 +1,6 @@
 package com.now.startupteamnow;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.RequiresApi;
-import androidx.appcompat.app.AlertDialog;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
-
 import android.Manifest;
-import android.app.Activity;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -31,8 +23,6 @@ import android.hardware.camera2.params.StreamConfigurationMap;
 import android.location.Location;
 import android.media.Image;
 import android.media.ImageReader;
-import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
@@ -63,11 +53,8 @@ import com.google.firebase.ml.vision.barcode.FirebaseVisionBarcode;
 import com.google.firebase.ml.vision.barcode.FirebaseVisionBarcodeDetector;
 import com.google.firebase.ml.vision.barcode.FirebaseVisionBarcodeDetectorOptions;
 import com.google.firebase.ml.vision.common.FirebaseVisionImage;
-import com.google.firebase.ml.vision.common.FirebaseVisionImageMetadata;
 
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
@@ -75,6 +62,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
+
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
 
 public class NativeCamera extends AppCompatActivity {
 
@@ -86,12 +78,14 @@ public class NativeCamera extends AppCompatActivity {
     private String lat, lon;
     private TextureView textureView;
     private static final SparseIntArray ORIENTATIONS = new SparseIntArray();
+
     static {
         ORIENTATIONS.append(Surface.ROTATION_0, 90);
         ORIENTATIONS.append(Surface.ROTATION_90, 0);
         ORIENTATIONS.append(Surface.ROTATION_180, 270);
         ORIENTATIONS.append(Surface.ROTATION_270, 180);
     }
+
     private String cameraId;
     protected CameraCharacteristics cameraCharacteristics;
     protected float fingerSpacing = 0;
@@ -125,82 +119,70 @@ public class NativeCamera extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_native_camera);
 
-        takePic = (Button) findViewById(R.id.take);
-        textureView = (TextureView) findViewById(R.id.texture_view);
-        assert textureView != null;
-        textureView.setSurfaceTextureListener(textureListener);
-        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
-        flashbtn = (Button) findViewById(R.id.button2);
+        try {
+            takePic = (Button) findViewById(R.id.take);
+            textureView = (TextureView) findViewById(R.id.texture_view);
+            assert textureView != null;
+            textureView.setSurfaceTextureListener(textureListener);
+            fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
+            flashbtn = (Button) findViewById(R.id.button2);
 
-
-        File output = new File(Environment.getExternalStorageDirectory()+"/NowImage/pic.jpg");
-        if (output.exists()) {
-            if (output.delete()) {
-                 Toast.makeText(NativeCamera.this, "Silindi", Toast.LENGTH_SHORT).show();
-            } else {
-                // Toast.makeText(NativeCamera.this, "Silin MEDI", Toast.LENGTH_LONG).show();
-            }
-        }
-
-        if(!checkPlayServices()){
-            buildAlertMessageNoGoogleService();
-            return;
-        }
-
-        if (!isLocationEnabled(NativeCamera.this)){
-            buildAlertMessageNoGps();
-            return;
-        }
-
-        flashbtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if(isTorchOn){
-                    isTorchOn = false;
-                    flashbtn.setText("OFF");
-                }else{
-                    isTorchOn = true;
-                    flashbtn.setText("ON");
+            flashbtn.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    if (isTorchOn) {
+                        isTorchOn = false;
+                        flashbtn.setText("OFF");
+                    } else {
+                        isTorchOn = true;
+                        flashbtn.setText("ON");
+                    }
                 }
-            }
-        });
+            });
 
-        takePic.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (ActivityCompat.checkSelfPermission(NativeCamera.this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-                    RequestPermission();
-                    return;
-                }
+            takePic.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    if (ActivityCompat.checkSelfPermission(NativeCamera.this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                        RequestPermission();
+                        return;
+                    }
 
-                fusedLocationClient.getLastLocation()
-                        .addOnSuccessListener(NativeCamera.this, new OnSuccessListener<Location>() {
-                            @Override
-                            public void onSuccess(Location location) {
-                                // Got last known location. In some rare situations this can be null.
-                                if (location != null) {
-                                    lat = String.valueOf(location.getLatitude());
-                                    lon = String.valueOf(location.getLongitude());
-                                    /*Toast.makeText(Camera.this, lat + " Last " + lon, Toast.LENGTH_SHORT).show();*/
+                    fusedLocationClient.getLastLocation()
+                            .addOnSuccessListener(NativeCamera.this, new OnSuccessListener<Location>() {
+                                @Override
+                                public void onSuccess(Location location) {
+                                    // Got last known location. In some rare situations this can be null.
+                                    if (location != null) {
+                                        lat = String.valueOf(location.getLatitude());
+                                        lon = String.valueOf(location.getLongitude());
+                                    }
                                 }
-                            }
-                        });
+                            });
 
+                    takePicture();
+                    zoomLevel = 1f;
+                    zoom = null;
+                }
+            });
 
-
-                takePicture();
-
-                zoomLevel = 1f;
-                zoom = null;
+            if (!checkPlayServices()) {
+                buildAlertMessageNoGoogleService();
+                return;
             }
-        });
 
+            if (!isLocationEnabled(NativeCamera.this)) {
+                buildAlertMessageNoGps();
+            }
+        } catch (Exception e) {
+            AfterError();
+        }
 
     }
 
 
-    private void RequestPermission(){
-        ActivityCompat.requestPermissions(NativeCamera.this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION},1);
+    private void RequestPermission() {
+        ActivityCompat.requestPermissions(NativeCamera.this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 1);
     }
 
     TextureView.SurfaceTextureListener textureListener = new TextureView.SurfaceTextureListener() {
@@ -209,14 +191,17 @@ public class NativeCamera extends AppCompatActivity {
             //open your camera here
             openCamera();
         }
+
         @Override
         public void onSurfaceTextureSizeChanged(SurfaceTexture surface, int width, int height) {
             // Transform you image captured size according to the surface width and height
         }
+
         @Override
         public boolean onSurfaceTextureDestroyed(SurfaceTexture surface) {
             return false;
         }
+
         @Override
         public void onSurfaceTextureUpdated(SurfaceTexture surface) {
         }
@@ -232,18 +217,20 @@ public class NativeCamera extends AppCompatActivity {
 
             createCameraPreview();
 
-
             try {
                 CameraCharacteristics characteristics = manager.getCameraCharacteristics(cameraDevice.getId());
                 Boolean available = characteristics.get(CameraCharacteristics.FLASH_INFO_AVAILABLE);
                 isFlashSupported = available == null ? false : available;
-
-            }catch (Exception e){ Toast.makeText(NativeCamera.this, e.toString(), Toast.LENGTH_SHORT).show();}
+            } catch (Exception e) {
+                AfterError();
+            }
         }
+
         @Override
         public void onDisconnected(CameraDevice camera) {
             cameraDevice.close();
         }
+
         @Override
         public void onError(CameraDevice camera, int error) {
             cameraDevice.close();
@@ -254,15 +241,16 @@ public class NativeCamera extends AppCompatActivity {
         @Override
         public void onCaptureCompleted(CameraCaptureSession session, CaptureRequest request, TotalCaptureResult result) {
             super.onCaptureCompleted(session, request, result);
-           // Toast.makeText(NativeCamera.this, "Saved:" + file, Toast.LENGTH_SHORT).show();
             createCameraPreview();
         }
     };
+
     protected void startBackgroundThread() {
         mBackgroundThread = new HandlerThread("Camera Background");
         mBackgroundThread.start();
         mBackgroundHandler = new Handler(mBackgroundThread.getLooper());
     }
+
     protected void stopBackgroundThread() {
         mBackgroundThread.quitSafely();
         try {
@@ -270,13 +258,15 @@ public class NativeCamera extends AppCompatActivity {
             mBackgroundThread = null;
             mBackgroundHandler = null;
         } catch (InterruptedException e) {
-            e.printStackTrace();
+            AfterError();
         }
     }
 
     protected void takePicture() {
-        if(null == cameraDevice) {
-            Log.e(TAG, "cameraDevice is null");
+        if (null == cameraDevice) {
+            Toast.makeText(NativeCamera.this, "Kamerada Xəta \n Zəhmət Olmasa Yenidən Cəhd Edin" , Toast.LENGTH_SHORT).show();
+            Intent intent = new Intent(this, NativeCamera.class);
+            startActivity(intent);
             return;
         }
         CameraManager manager = (CameraManager) getSystemService(Context.CAMERA_SERVICE);
@@ -293,17 +283,17 @@ public class NativeCamera extends AppCompatActivity {
                 width = jpegSizes[0].getWidth();
                 height = jpegSizes[0].getHeight();
             }
-            ImageReader reader = ImageReader.newInstance(width/divided, height/divided, ImageFormat.JPEG, 1);
+            ImageReader reader = ImageReader.newInstance(width / divided, height / divided, ImageFormat.JPEG, 1);
             List<Surface> outputSurfaces = new ArrayList<Surface>(2);
             outputSurfaces.add(reader.getSurface());
             outputSurfaces.add(new Surface(textureView.getSurfaceTexture()));
             final CaptureRequest.Builder captureBuilder = cameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_STILL_CAPTURE);
             captureBuilder.addTarget(reader.getSurface());
             captureBuilder.set(CaptureRequest.CONTROL_MODE, CameraMetadata.CONTROL_MODE_AUTO);
-            if(isTorchOn){
+            if (isTorchOn) {
                 captureBuilder.set(CaptureRequest.CONTROL_AE_MODE, CameraMetadata.CONTROL_AF_MODE_AUTO);
                 captureBuilder.set(CaptureRequest.FLASH_MODE, CameraMetadata.FLASH_MODE_TORCH);
-            }else{
+            } else {
                 captureBuilder.set(CaptureRequest.CONTROL_AE_MODE, CameraMetadata.CONTROL_AF_MODE_AUTO);
                 captureBuilder.set(CaptureRequest.FLASH_MODE, CameraMetadata.FLASH_MODE_OFF);
             }
@@ -313,7 +303,7 @@ public class NativeCamera extends AppCompatActivity {
             if (zoom != null) {
                 captureBuilder.set(CaptureRequest.SCALER_CROP_REGION, zoom);
             }
-            final File file = new File(Environment.getExternalStorageDirectory()+"/NowImage/pic.jpg");
+            final File file = new File(Environment.getExternalStorageDirectory() + "/NowImage/pic.jpg");
             ImageReader.OnImageAvailableListener readerListener = new ImageReader.OnImageAvailableListener() {
                 @Override
                 public void onImageAvailable(ImageReader reader) {
@@ -324,34 +314,28 @@ public class NativeCamera extends AppCompatActivity {
                         byte[] bytes = new byte[buffer.capacity()];
                         buffer.get(bytes);
                         save(bytes);
-                        /*Bitmap bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
-                        FirebaseVisionImage firebaseVisionImage = FirebaseVisionImage.fromBitmap(bitmap);
-                        scanBarcodes(firebaseVisionImage);*/
                     } catch (Exception e) {
-                        e.printStackTrace();
+                        Toast.makeText(NativeCamera.this, "Kamera`da Xəta \n Yenidən Cəhd Edin", Toast.LENGTH_LONG).show();
+                        Intent intent = new Intent(NativeCamera.this, HomePage.class);
+                        startActivity(intent);
                     } finally {
                         if (image != null) {
                             image.close();
                         }
                     }
                 }
+
                 private void save(byte[] bytes) throws IOException {
-                    OutputStream output = null;
-                    try {
-                        output = new FileOutputStream(file);
-                        output.write(bytes);
-                        FirebaseVisionImage image;
                         try {
-                            image = FirebaseVisionImage.fromFilePath(getApplicationContext(), Uri.fromFile(file));
+                            Bitmap bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
+                            FirebaseVisionImage image = FirebaseVisionImage.fromBitmap(bitmap);
                             scanBarcodes(image);
                         } catch (Exception e) {
-                            e.printStackTrace();
+                            Toast.makeText(NativeCamera.this, "Kamera`da Xəta \n Yenidən Cəhd Edin", Toast.LENGTH_LONG).show();
+                            Intent intent = new Intent(NativeCamera.this, HomePage.class);
+                            startActivity(intent);
                         }
-                    } finally {
-                        if (null != output) {
-                            output.close();
-                        }
-                    }
+
                 }
             };
             reader.setOnImageAvailableListener(readerListener, mBackgroundHandler);
@@ -359,7 +343,6 @@ public class NativeCamera extends AppCompatActivity {
                 @Override
                 public void onCaptureCompleted(CameraCaptureSession session, CaptureRequest request, TotalCaptureResult result) {
                     super.onCaptureCompleted(session, request, result);
-                    //Toast.makeText(NativeCamera.this, "Saved:" + file, Toast.LENGTH_SHORT).show();
                     createCameraPreview();
                 }
             };
@@ -369,18 +352,18 @@ public class NativeCamera extends AppCompatActivity {
                     try {
                         session.capture(captureBuilder.build(), captureCallbackListener, mBackgroundHandler);
                     } catch (CameraAccessException e) {
-                        e.printStackTrace();
+                        AfterError();
                     }
                 }
+
                 @Override
                 public void onConfigureFailed(CameraCaptureSession session) {
                 }
             }, mBackgroundHandler);
         } catch (CameraAccessException e) {
-            Toast.makeText(NativeCamera.this, e.toString(), Toast.LENGTH_SHORT).show();
+            AfterError();
         }
     }
-
 
     protected void createCameraPreview() {
         try {
@@ -390,7 +373,7 @@ public class NativeCamera extends AppCompatActivity {
             Surface surface = new Surface(texture);
             captureRequestBuilder = cameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW);
             captureRequestBuilder.addTarget(surface);
-            cameraDevice.createCaptureSession(Arrays.asList(surface), new CameraCaptureSession.StateCallback(){
+            cameraDevice.createCaptureSession(Arrays.asList(surface), new CameraCaptureSession.StateCallback() {
                 @Override
                 public void onConfigured(@NonNull CameraCaptureSession cameraCaptureSession) {
                     //The camera is already closed
@@ -401,15 +384,17 @@ public class NativeCamera extends AppCompatActivity {
                     cameraCaptureSessions = cameraCaptureSession;
                     updatePreview();
                 }
+
                 @Override
                 public void onConfigureFailed(@NonNull CameraCaptureSession cameraCaptureSession) {
                     Toast.makeText(NativeCamera.this, "Configuration change", Toast.LENGTH_SHORT).show();
                 }
             }, null);
         } catch (CameraAccessException e) {
-            e.printStackTrace();
+            AfterError();
         }
     }
+
     private void openCamera() {
         CameraManager manager = (CameraManager) getSystemService(Context.CAMERA_SERVICE);
         Log.e(TAG, "is camera open");
@@ -427,21 +412,23 @@ public class NativeCamera extends AppCompatActivity {
             }
             manager.openCamera(cameraId, stateCallback, null);
         } catch (CameraAccessException e) {
-            e.printStackTrace();
+            AfterError();
         }
         Log.e(TAG, "openCamera X");
     }
+
     protected void updatePreview() {
-        if(null == cameraDevice) {
+        if (null == cameraDevice) {
             Log.e(TAG, "updatePreview error, return");
         }
         captureRequestBuilder.set(CaptureRequest.CONTROL_MODE, CameraMetadata.CONTROL_MODE_AUTO);
         try {
             cameraCaptureSessions.setRepeatingRequest(captureRequestBuilder.build(), null, mBackgroundHandler);
         } catch (CameraAccessException e) {
-            e.printStackTrace();
+            AfterError();
         }
     }
+
     private void closeCamera() {
         if (null != cameraDevice) {
             cameraDevice.close();
@@ -452,6 +439,7 @@ public class NativeCamera extends AppCompatActivity {
             imageReader = null;
         }
     }
+
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         if (requestCode == REQUEST_CAMERA_PERMISSION) {
@@ -462,6 +450,7 @@ public class NativeCamera extends AppCompatActivity {
             }
         }
     }
+
     @Override
     protected void onResume() {
         super.onResume();
@@ -472,10 +461,11 @@ public class NativeCamera extends AppCompatActivity {
         } else {
             textureView.setSurfaceTextureListener(textureListener);
         }
-        if(isLocationEnabled(NativeCamera.this)){
+        if (isLocationEnabled(NativeCamera.this)) {
             startLocationUpdates();
         }
     }
+
     @Override
     protected void onPause() {
         Log.e(TAG, "onPause");
@@ -539,30 +529,38 @@ public class NativeCamera extends AppCompatActivity {
     }
 
     private void startLocationUpdates() {
-        locationRequest = new LocationRequest();
-        locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
-        locationRequest.setInterval(UPDATE_INTERVAL);
-        locationRequest.setFastestInterval(FASTEST_INTERVAL);
+        try {
+            locationRequest = new LocationRequest();
+            locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+            locationRequest.setInterval(UPDATE_INTERVAL);
+            locationRequest.setFastestInterval(FASTEST_INTERVAL);
 
-        if (ActivityCompat.checkSelfPermission(this,
-                Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            Toast.makeText(this, "Zəhmət Olmasa İcazələri Təsdiq Edin!", Toast.LENGTH_LONG).show();
+            if (ActivityCompat.checkSelfPermission(this,
+                    Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                Toast.makeText(this, "Zəhmət Olmasa İcazələri Təsdiq Edin!", Toast.LENGTH_LONG).show();
+            }
+            fusedLocationClient.requestLocationUpdates(locationRequest, new LocationCallback() {
+
+                @Override
+                public void onLocationResult(LocationResult locationResult) {
+                    if (locationResult == null) {
+                        return;
+                    }
+                    for (Location location : locationResult.getLocations()) {
+                        lat = String.valueOf(location.getLatitude());
+                        lon = String.valueOf(location.getLongitude());
+                        /*Toast.makeText(NativeCamera.this, lat + " Update " + lon, Toast.LENGTH_LONG).show();*/
+                    }
+                }
+
+                ;
+
+            }, null);
+        }catch (Exception e){
+            Toast.makeText(NativeCamera.this, "GPS`də Xəta \n Zəhmət Olmasa Yenidən Cəhd Edin" , Toast.LENGTH_SHORT).show();
+            Intent intent = new Intent(this, NativeCamera.class);
+            startActivity(intent);
         }
-        fusedLocationClient.requestLocationUpdates(locationRequest, new LocationCallback(){
-
-            @Override
-            public void onLocationResult(LocationResult locationResult) {
-                if (locationResult == null) {
-                    return;
-                }
-                for (Location location : locationResult.getLocations()) {
-                    lat = String.valueOf(location.getLatitude());
-                    lon = String.valueOf(location.getLongitude());
-                     /*Toast.makeText(NativeCamera.this, lat + " Update " + lon, Toast.LENGTH_LONG).show();*/
-                }
-            };
-
-        },null);
     }
 
     private void scanBarcodes(FirebaseVisionImage image) {
@@ -581,57 +579,28 @@ public class NativeCamera extends AppCompatActivity {
                     @Override
                     public void onSuccess(List<FirebaseVisionBarcode> barcodes) {
 
-                        if(barcodes.size() == 0){
+                        if (barcodes.size() == 0) {
                             Toast.makeText(NativeCamera.this, "Zəhmət Olmasa Qrafanın Daxilində Çəkin", Toast.LENGTH_LONG).show();
                         }
 
-                        for (FirebaseVisionBarcode barcode: barcodes) {
+                        for (FirebaseVisionBarcode barcode : barcodes) {
                             Rect bounds = barcode.getBoundingBox();
                             Point[] corners = barcode.getCornerPoints();
 
                             String rawValue = barcode.getRawValue();
                             valueofcode = rawValue;
                             Toast.makeText(NativeCamera.this, rawValue, Toast.LENGTH_LONG).show();
-
                             int valueType = barcode.getValueType();
 
-                            File output = new File(Environment.getExternalStorageDirectory()+"/NowImage/pic.jpg");
-                            if (output.exists()) {
-                                if (output.delete()) {
-                                    // Toast.makeText(NativeCamera.this, "Silindi", Toast.LENGTH_LONG).show();
+                            Bundle bundle = new Bundle();
+                            bundle.putString("TextOfCode", valueofcode);
+                            bundle.putString("Lat", lat);
+                            bundle.putString("Lon", lon);
+                            Intent intent = new Intent(NativeCamera.this, Check.class);
+                            intent.putExtras(bundle);
+                            startActivity(intent);
 
-                                    flashbtn.setText("OFF");
-                                    Bundle bundle = new Bundle();
-                                    bundle.putString("TextOfCode", valueofcode);
-                                    bundle.putString("Lat", lat);
-                                    bundle.putString("Lon", lon);
-                                    Intent intent = new Intent(NativeCamera.this, Check.class);
-                                    intent.putExtras(bundle);
-                                    startActivity(intent);
-                                } else {
-                                    // Toast.makeText(NativeCamera.this, "Silin MEDI", Toast.LENGTH_LONG).show();
-                                }
-                            }
-                            // See API reference for complete list of supported types
-                            switch (valueType) {
-                                case FirebaseVisionBarcode.TYPE_WIFI:
-                                    String ssid = barcode.getWifi().getSsid();
-                                    String password = barcode.getWifi().getPassword();
-                                    int type = barcode.getWifi().getEncryptionType();
-                                    break;
-                                case FirebaseVisionBarcode.TYPE_URL:
-                                    String title = barcode.getUrl().getTitle();
-                                    String url = barcode.getUrl().getUrl();
-                                    break;
-                                case FirebaseVisionBarcode.FORMAT_ALL_FORMATS:
-                                    String text = barcode.getDisplayValue();
-
-                            }
                         }
-
-
-                        // [END get_barcodes]
-                        // [END_EXCLUDE]
                     }
                 })
                 .addOnFailureListener(new OnFailureListener() {
@@ -639,11 +608,10 @@ public class NativeCamera extends AppCompatActivity {
                     public void onFailure(@NonNull Exception e) {
                         // Task failed with an exception
                         // ...
-                        Toast.makeText(NativeCamera.this, "Alinmir", Toast.LENGTH_LONG).show();
+                        Toast.makeText(NativeCamera.this, "Analizdə Səhvlik... \n Yenidən Cəhd Edin", Toast.LENGTH_LONG).show();
 
                     }
                 });
-        // [END run_detector]
     }
 
     public static boolean isLocationEnabled(Context context) {
@@ -661,7 +629,7 @@ public class NativeCamera extends AppCompatActivity {
         try {
             Rect rect = null;
             CameraCharacteristics characteristics = manager.getCameraCharacteristics(cameraDevice.getId());
-            if(characteristics != null){
+            if (characteristics != null) {
                 maximumZoomLevel = characteristics.get(CameraCharacteristics.SCALER_AVAILABLE_MAX_DIGITAL_ZOOM);
 
                 rect = characteristics.get(CameraCharacteristics.SENSOR_INFO_ACTIVE_ARRAY_SIZE);
@@ -680,7 +648,7 @@ public class NativeCamera extends AppCompatActivity {
                             delta = maximumZoomLevel - zoomLevel;
                         }
                         zoomLevel = zoomLevel + delta;
-                    } else if (currentFingerSpacing < fingerSpacing){ //Don't over zoom-out
+                    } else if (currentFingerSpacing < fingerSpacing) { //Don't over zoom-out
                         if ((zoomLevel - delta) < 1f) {
                             delta = zoomLevel - 1f;
                         }
@@ -688,11 +656,11 @@ public class NativeCamera extends AppCompatActivity {
                     }
                     float ratio = (float) 1 / zoomLevel; //This ratio is the ratio of cropped Rect to Camera's original(Maximum) Rect
                     //croppedWidth and croppedHeight are the pixels cropped away, not pixels after cropped
-                    int croppedWidth = rect.width() - Math.round((float)rect.width() * ratio);
-                    int croppedHeight = rect.height() - Math.round((float)rect.height() * ratio);
+                    int croppedWidth = rect.width() - Math.round((float) rect.width() * ratio);
+                    int croppedHeight = rect.height() - Math.round((float) rect.height() * ratio);
                     //Finally, zoom represents the zoomed visible area
-                    zoom = new Rect(croppedWidth/2, croppedHeight/2,
-                            rect.width() - croppedWidth/2, rect.height() - croppedHeight/2);
+                    zoom = new Rect(croppedWidth / 2, croppedHeight / 2,
+                            rect.width() - croppedWidth / 2, rect.height() - croppedHeight / 2);
                     captureRequestBuilder.set(CaptureRequest.SCALER_CROP_REGION, zoom);
                 }
                 fingerSpacing = currentFingerSpacing;
@@ -703,7 +671,7 @@ public class NativeCamera extends AppCompatActivity {
             cameraCaptureSessions.setRepeatingRequest(captureRequestBuilder.build(), null, mBackgroundHandler);
             return true;
         } catch (final Exception e) {
-            Toast.makeText(NativeCamera.this, e.toString(), Toast.LENGTH_SHORT).show();
+            AfterError();
             return true;
         }
     }
@@ -715,5 +683,9 @@ public class NativeCamera extends AppCompatActivity {
     }
 
 
-
+    private void AfterError(){
+        Toast.makeText(NativeCamera.this, "Kamera`da Xəta \n Yenidən Cəhd Edin", Toast.LENGTH_LONG).show();
+        Intent intent = new Intent(NativeCamera.this, HomePage.class);
+        startActivity(intent);
+    }
 }
