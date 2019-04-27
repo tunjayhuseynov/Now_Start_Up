@@ -1,6 +1,7 @@
 package com.now.startupteamnow;
 
 import android.Manifest;
+import android.app.Activity;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -23,11 +24,14 @@ import android.hardware.camera2.params.StreamConfigurationMap;
 import android.location.Location;
 import android.media.Image;
 import android.media.ImageReader;
+import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.provider.Settings;
+import android.util.DisplayMetrics;
 import android.util.Log;
 import android.util.Size;
 import android.util.SparseIntArray;
@@ -36,6 +40,7 @@ import android.view.Surface;
 import android.view.TextureView;
 import android.view.View;
 import android.widget.Button;
+import android.widget.FrameLayout;
 import android.widget.Toast;
 
 import com.google.android.gms.common.ConnectionResult;
@@ -53,8 +58,10 @@ import com.google.firebase.ml.vision.barcode.FirebaseVisionBarcode;
 import com.google.firebase.ml.vision.barcode.FirebaseVisionBarcodeDetector;
 import com.google.firebase.ml.vision.barcode.FirebaseVisionBarcodeDetectorOptions;
 import com.google.firebase.ml.vision.common.FirebaseVisionImage;
+import com.google.firebase.ml.vision.common.FirebaseVisionImageMetadata;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
@@ -64,6 +71,7 @@ import java.util.List;
 import java.util.Objects;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
@@ -111,8 +119,11 @@ public class NativeCamera extends AppCompatActivity {
     private boolean isTorchOn = false;
     private Button flashbtn;
     private String valueofcode;
+    private  int DSI_height, DSI_width;
+    private int newWidth, newHeight;
 
-    private int divided = 30;
+    private int imagewidth = 480;
+    private int imageheight = 360;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -120,6 +131,10 @@ public class NativeCamera extends AppCompatActivity {
         setContentView(R.layout.activity_native_camera);
 
         try {
+            DisplayMetrics displayMetrics = new DisplayMetrics();
+            getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
+            DSI_height = displayMetrics.heightPixels;
+            DSI_width = displayMetrics.widthPixels;
             takePic = (Button) findViewById(R.id.take);
             textureView = (TextureView) findViewById(R.id.texture_view);
             assert textureView != null;
@@ -269,10 +284,10 @@ public class NativeCamera extends AppCompatActivity {
             startActivity(intent);
             return;
         }
-        CameraManager manager = (CameraManager) getSystemService(Context.CAMERA_SERVICE);
+       CameraManager manager = (CameraManager) getSystemService(Context.CAMERA_SERVICE);
 
         try {
-            CameraCharacteristics characteristics = manager.getCameraCharacteristics(cameraDevice.getId());
+           CameraCharacteristics characteristics = manager.getCameraCharacteristics(cameraDevice.getId());
             Size[] jpegSizes = null;
             if (characteristics != null) {
                 jpegSizes = Objects.requireNonNull(characteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP)).getOutputSizes(ImageFormat.JPEG);
@@ -283,7 +298,7 @@ public class NativeCamera extends AppCompatActivity {
                 width = jpegSizes[0].getWidth();
                 height = jpegSizes[0].getHeight();
             }
-            ImageReader reader = ImageReader.newInstance(width / divided, height / divided, ImageFormat.JPEG, 1);
+            ImageReader reader = ImageReader.newInstance(imagewidth, imageheight, ImageFormat.JPEG, 1);
             List<Surface> outputSurfaces = new ArrayList<Surface>(2);
             outputSurfaces.add(reader.getSurface());
             outputSurfaces.add(new Surface(textureView.getSurfaceTexture()));
@@ -309,14 +324,17 @@ public class NativeCamera extends AppCompatActivity {
                 public void onImageAvailable(ImageReader reader) {
                     Image image = null;
                     try {
+
                         image = reader.acquireLatestImage();
                         ByteBuffer buffer = image.getPlanes()[0].getBuffer();
+
                         byte[] bytes = new byte[buffer.capacity()];
                         buffer.get(bytes);
                         save(bytes);
                     } catch (Exception e) {
-                        Toast.makeText(NativeCamera.this, "Kamera`da Xəta \n Yenidən Cəhd Edin", Toast.LENGTH_LONG).show();
-                        Intent intent = new Intent(NativeCamera.this, HomePage.class);
+                      Toast.makeText(NativeCamera.this, "Kamera`da Xəta \n Yenidən Cəhd Edin", Toast.LENGTH_LONG).show();
+
+                         Intent intent = new Intent(NativeCamera.this, HomePage.class);
                         startActivity(intent);
                     } finally {
                         if (image != null) {
@@ -326,10 +344,16 @@ public class NativeCamera extends AppCompatActivity {
                 }
 
                 private void save(byte[] bytes) throws IOException {
-                        try {
-                            Bitmap bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
-                            FirebaseVisionImage image = FirebaseVisionImage.fromBitmap(bitmap);
-                            scanBarcodes(image);
+                    OutputStream output = null;
+
+                    try {
+                            output = new FileOutputStream(file);
+                            output.write(bytes);
+
+                            FirebaseVisionImage image = FirebaseVisionImage.fromFilePath(getApplicationContext(), Uri.fromFile(file));
+
+
+                        scanBarcodes(image);
                         } catch (Exception e) {
                             Toast.makeText(NativeCamera.this, "Kamera`da Xəta \n Yenidən Cəhd Edin", Toast.LENGTH_LONG).show();
                             Intent intent = new Intent(NativeCamera.this, HomePage.class);
@@ -365,11 +389,15 @@ public class NativeCamera extends AppCompatActivity {
         }
     }
 
+
+
+
     protected void createCameraPreview() {
         try {
             SurfaceTexture texture = textureView.getSurfaceTexture();
             assert texture != null;
             texture.setDefaultBufferSize(imageDimension.getWidth(), imageDimension.getHeight());
+
             Surface surface = new Surface(texture);
             captureRequestBuilder = cameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW);
             captureRequestBuilder.addTarget(surface);
@@ -395,6 +423,19 @@ public class NativeCamera extends AppCompatActivity {
         }
     }
 
+    private void setAspectRatioTextureView(int ResolutionWidth , int ResolutionHeight )
+    {
+        if(ResolutionWidth > ResolutionHeight){
+            newWidth = DSI_width;
+            newHeight = ((DSI_width * ResolutionWidth)/ResolutionHeight);
+
+        }else {
+            newWidth = DSI_width;
+            newHeight = ((DSI_width * ResolutionHeight)/ResolutionWidth);
+        }
+
+    }
+
     private void openCamera() {
         CameraManager manager = (CameraManager) getSystemService(Context.CAMERA_SERVICE);
         Log.e(TAG, "is camera open");
@@ -404,6 +445,9 @@ public class NativeCamera extends AppCompatActivity {
             StreamConfigurationMap map = characteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
             assert map != null;
             imageDimension = map.getOutputSizes(SurfaceTexture.class)[0];
+            setAspectRatioTextureView(imageDimension.getWidth(), imageDimension.getHeight());
+
+            textureView.setLayoutParams(new FrameLayout.LayoutParams(newWidth,newHeight));
             // Add permission for camera and let user grant the permission
             if (ActivityCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED || ActivityCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED || ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
                 Toast.makeText(NativeCamera.this, "Zəhmət Olmasa İcazələri Təsdiq Edin", Toast.LENGTH_SHORT).show();
@@ -688,4 +732,5 @@ public class NativeCamera extends AppCompatActivity {
         Intent intent = new Intent(NativeCamera.this, HomePage.class);
         startActivity(intent);
     }
+
 }

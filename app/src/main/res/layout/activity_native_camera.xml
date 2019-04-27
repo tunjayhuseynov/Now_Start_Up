@@ -1,11 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/common_google_signin_btn_text_dark_focused"
     tools:context=".NativeCamera">
+
+    <Button
+        android:id="@+id/button2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="OFF"
+        app:layout_anchor="@+id/texture_view"
+        android:layout_gravity="start|top" />
 
     <TextureView
         android:id="@+id/texture_view"
@@ -17,16 +25,8 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Button"
-        app:layout_anchor="@+id/texture_view"
-        app:layout_anchorGravity="bottom|center" />
-
-    <Button
-        android:id="@+id/button2"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="OFF"
-        app:layout_anchor="@+id/texture_view"
-        app:layout_anchorGravity="left|top" />
+        android:layout_gravity="center|bottom"
+        app:layout_anchor="@+id/texture_view" />
 
 
-</androidx.coordinatorlayout.widget.CoordinatorLayout>
+</FrameLayout>
