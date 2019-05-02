@@ -5,6 +5,6 @@ import retrofit2.http.GET;
 import retrofit2.http.Path;
 
 public interface JsonApi {
-    @GET("users/{Id}")
+    @GET("api/users/{Id}")
     Call<User> getUser(@Path("Id") int id);
 }

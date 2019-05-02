@@ -5,7 +5,7 @@ public class User {
     private String Name;
     private String Surname;
     private String Date;
-    private String ImgPath;
+    private String ImgName;
     private boolean IsMale;
     private int Bonus;
 
@@ -26,7 +26,7 @@ public class User {
     }
 
     public String getImgPath() {
-        return ImgPath;
+        return ImgName;
     }
 
     public boolean isMale() {

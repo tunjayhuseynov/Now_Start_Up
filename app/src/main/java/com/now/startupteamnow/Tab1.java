@@ -6,6 +6,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import androidx.annotation.Nullable;
@@ -27,7 +28,8 @@ public class Tab1 extends Fragment {
 
     private ImageView profilePhoto;
     private TextView name;
-
+    private TextView bonus;
+    private ProgressBar bar;
 
     public Tab1() {
         // Required empty public constructor
@@ -52,8 +54,14 @@ public class Tab1 extends Fragment {
         try {
 
             name = getView().findViewById(R.id.name);
+            profilePhoto= (ImageView) getView().findViewById(R.id.profile_image);
+            bonus = getView().findViewById(R.id.bonusview);
+            bar = getView().findViewById(R.id.bar);
 
-            String url = BuildConfig.BASE_URL + "users/1";
+            name.setText("");
+            profilePhoto.setVisibility(View.INVISIBLE);
+            bonus.setText("");
+
 
             Retrofit retrofit = new Retrofit.Builder()
                     .baseUrl(BuildConfig.BASE_URL)
@@ -73,8 +81,14 @@ public class Tab1 extends Fragment {
                        name.setText("Error");
                        return;
                    }
+
+                    bar.setVisibility(View.INVISIBLE);
+                   profilePhoto.setVisibility(View.VISIBLE);
                    User user1 = response.body();
-                   name.setText(user1.getName() + " " + user1.getSurname());
+                   String FullName = user1.getName() + " " + user1.getSurname();
+                    Picasso.get().load(BuildConfig.BASE_URL + "images/"+user1.getImgPath()).into(profilePhoto);
+                    bonus.setText("Bonusunuz: " + String.valueOf(user1.getBonus()));
+                   name.setText(FullName);
                 }
 
                 @Override
@@ -83,9 +97,6 @@ public class Tab1 extends Fragment {
                 }
             });
 
-
-            profilePhoto= (ImageView) getView().findViewById(R.id.profile_image);
-            Picasso.get().load("http://i.imgur.com/DvpvklR.png").into(profilePhoto);
 
 
 
