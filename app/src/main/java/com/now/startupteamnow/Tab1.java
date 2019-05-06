@@ -1,5 +1,6 @@
 package com.now.startupteamnow;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -15,7 +16,9 @@ import androidx.fragment.app.Fragment;
 import com.squareup.picasso.Picasso;
 
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -62,6 +65,9 @@ public class Tab1 extends Fragment {
             profilePhoto.setVisibility(View.INVISIBLE);
             bonus.setText("");
 
+            Intent intent = Objects.requireNonNull(getActivity()).getIntent();
+            String token = intent.getStringExtra("token");
+            int id = intent.getIntExtra("id", 0);
 
             Retrofit retrofit = new Retrofit.Builder()
                     .baseUrl(BuildConfig.BASE_URL)
@@ -72,7 +78,7 @@ public class Tab1 extends Fragment {
             Map<String, String> parameters = new HashMap<>();
 
 
-            final Call<User> user = jsonApi.getUser(1);
+            final Call<User> user = jsonApi.getUserWithPost(id,token);
 
             user.enqueue(new Callback<User>() {
                 @Override
@@ -82,12 +88,14 @@ public class Tab1 extends Fragment {
                        return;
                    }
 
-                    bar.setVisibility(View.INVISIBLE);
+                   bar.setVisibility(View.INVISIBLE);
                    profilePhoto.setVisibility(View.VISIBLE);
                    User user1 = response.body();
-                   String FullName = user1.getName() + " " + user1.getSurname();
-                    Picasso.get().load(BuildConfig.BASE_URL + "images/"+user1.getImgPath()).into(profilePhoto);
-                    bonus.setText("Bonusunuz: " + String.valueOf(user1.getBonus()));
+                    assert user1 != null;
+                    String FullName = user1.getName() + " " + user1.getSurname();
+                   Picasso.get().load(BuildConfig.BASE_URL + "images/"+user1.getImgPath()).into(profilePhoto);
+                   String textBonus = String.format(Locale.getDefault(),"Bonusunuz: %d",user1.getBonus());
+                   bonus.setText(textBonus);
                    name.setText(FullName);
                 }
 

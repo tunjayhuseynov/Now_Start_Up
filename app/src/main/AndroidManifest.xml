@@ -21,21 +21,28 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
         tools:ignore="GoogleAppIndexingWarning">
-        <activity android:name=".CameraResult"></activity>
+        <activity android:name=".LogIn"></activity>
+        <activity android:name=".Registration" />
+        <activity android:name=".Opening">
+
+        </activity>
+        <activity android:name=".CameraResult" />
         <activity
             android:name=".ScanCamera"
             android:screenOrientation="fullUser"
             tools:replace="screenOrientation" />
-        <activity android:name=".HomePage">
+        <activity android:name=".HomePage" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".Camera" />
-        <activity android:name=".NativeCamera" />
         <activity android:name=".Check" />
+
+        <meta-data
+            android:name="preloaded_fonts"
+            android:resource="@array/preloaded_fonts" />
     </application>
 
 </manifest>

@@ -47,6 +47,7 @@ public class HomePage extends AppCompatActivity {
     public  String res;
     private static final String TAG = "AndroidCameraApi";
     private FusedLocationProviderClient fusedLocationClient;
+    private LocationCallback locationCallback;
     private static final int PLAY_SERVICES_RESOLUTION_REQUEST = 9000;
     private static final long UPDATE_INTERVAL = 1000, FASTEST_INTERVAL = 1000;
     private String lat, lon;
@@ -180,7 +181,8 @@ public class HomePage extends AppCompatActivity {
                 locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
                 locationRequest.setInterval(UPDATE_INTERVAL);
                 locationRequest.setFastestInterval(FASTEST_INTERVAL);
-                fusedLocationClient.requestLocationUpdates(locationRequest, new LocationCallback() {
+
+                locationCallback =  new LocationCallback() {
 
                     @Override
                     public void onLocationResult(LocationResult locationResult) {
@@ -196,13 +198,20 @@ public class HomePage extends AppCompatActivity {
 
                     ;
 
-                }, null);
+                };
+                fusedLocationClient.requestLocationUpdates(locationRequest,locationCallback, null);
             }
 
         }catch (Exception e){
             Toast.makeText(HomePage.this, "GPS`də Xəta \n Zəhmət Olmasa Tətbiqi Yenidən Açın" , Toast.LENGTH_SHORT).show();
 
         }
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        stopLocationUpdates();
     }
 
     private boolean checkPlayServices() {
@@ -220,6 +229,10 @@ public class HomePage extends AppCompatActivity {
         }
 
         return true;
+    }
+
+    private void stopLocationUpdates() {
+        fusedLocationClient.removeLocationUpdates(locationCallback);
     }
 
     protected void buildAlertMessageNoGoogleService() {

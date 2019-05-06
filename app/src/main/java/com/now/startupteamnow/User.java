@@ -8,6 +8,7 @@ public class User {
     private String ImgName;
     private boolean IsMale;
     private int Bonus;
+    private String Token;
 
     public int getId() {
         return Id;
@@ -36,4 +37,6 @@ public class User {
     public int getBonus() {
         return Bonus;
     }
+
+    public String getToken(){ return Token;}
 }
