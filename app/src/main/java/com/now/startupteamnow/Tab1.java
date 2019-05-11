@@ -57,7 +57,7 @@ public class Tab1 extends Fragment {
         try {
 
             name = getView().findViewById(R.id.name);
-            profilePhoto= (ImageView) getView().findViewById(R.id.profile_image);
+            profilePhoto= (ImageView) getView().findViewById(R.id.uploadedpc);
             bonus = getView().findViewById(R.id.bonusview);
             bar = getView().findViewById(R.id.bar);
 
@@ -92,11 +92,13 @@ public class Tab1 extends Fragment {
                    profilePhoto.setVisibility(View.VISIBLE);
                    User user1 = response.body();
                     assert user1 != null;
-                    String FullName = user1.getName() + " " + user1.getSurname();
-                   Picasso.get().load(BuildConfig.BASE_URL + "images/"+user1.getImgPath()).into(profilePhoto);
-                   String textBonus = String.format(Locale.getDefault(),"Bonusunuz: %d",user1.getBonus());
-                   bonus.setText(textBonus);
-                   name.setText(FullName);
+                    if(user1.getId() > 0){
+                        String FullName = user1.getName() + " " + user1.getSurname();
+                        Picasso.get().load(BuildConfig.BASE_URL + "images/"+user1.getImgPath()).into(profilePhoto);
+                        String textBonus = String.format(Locale.getDefault(),"Bonusunuz: %d",user1.getBonus());
+                        bonus.setText(textBonus);
+                        name.setText(FullName);
+                    }
                 }
 
                 @Override

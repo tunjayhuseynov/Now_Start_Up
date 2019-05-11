@@ -18,7 +18,7 @@
         app:layout_constraintVertical_bias="1.0" />
 
     <de.hdodenhof.circleimageview.CircleImageView
-        android:id="@+id/profile_image"
+        android:id="@+id/uploadedpc"
         android:layout_width="301dp"
         android:layout_height="198dp"
         android:layout_marginTop="44dp"
@@ -45,7 +45,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/profile_image" />
+        app:layout_constraintTop_toBottomOf="@+id/uploadedpc" />
 
     <TextView
         android:id="@+id/bonusview"

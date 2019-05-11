@@ -4,12 +4,17 @@ public class QRcode {
 
     private String Code;
     private int Bonus;
-    private float xCoordination;
-    private float yCoordination;
+    private double xCoordination;
+    private double yCoordination;
     private String CompanyName;
     private String Details;
     private boolean BonusType;
     private String Image;
+    private int Id;
+
+    public int getId() {
+        return Id;
+    }
 
     public String getCode() {
         return Code;
@@ -19,11 +24,11 @@ public class QRcode {
         return Bonus;
     }
 
-    public float getxCoordination() {
+    public double getxCoordination() {
         return xCoordination;
     }
 
-    public float getyCoordination() {
+    public double getyCoordination() {
         return yCoordination;
     }
 

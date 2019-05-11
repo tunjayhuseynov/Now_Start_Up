@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".CreateNewProfile">
+
+
+    <de.hdodenhof.circleimageview.CircleImageView
+        android:id="@+id/uploadedpc"
+        android:layout_width="277dp"
+        android:layout_height="160dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginBottom="8dp"
+        android:src="@drawable/zeynal"
+        app:layout_constraintBottom_toTopOf="@+id/name"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.508"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.117" />
+
+    <Button
+        android:id="@+id/btnUpload"
+        android:layout_width="175dp"
+        android:layout_height="30dp"
+        android:layout_marginTop="20dp"
+        android:background="@color/colorAccent"
+        android:fontFamily="@font/baloo"
+        android:text="Şəkil Yüklə"
+        android:textColor="@color/white"
+        android:textSize="16sp"
+        app:layout_constraintEnd_toEndOf="@+id/uploadedpc"
+        app:layout_constraintStart_toStartOf="@+id/uploadedpc"
+        app:layout_constraintTop_toBottomOf="@+id/uploadedpc" />
+
+    <EditText
+        android:id="@+id/editname"
+        android:layout_width="236dp"
+        android:layout_height="54dp"
+        android:layout_marginTop="30dp"
+        android:ems="10"
+        android:hint="Ad"
+        android:inputType="textPersonName"
+        app:layout_constraintEnd_toEndOf="@+id/btnUpload"
+        app:layout_constraintHorizontal_bias="0.531"
+        app:layout_constraintStart_toStartOf="@+id/btnUpload"
+        app:layout_constraintTop_toBottomOf="@+id/btnUpload" />
+
+    <EditText
+        android:id="@+id/editsurname"
+        android:layout_width="236dp"
+        android:layout_height="54dp"
+        android:layout_marginTop="30dp"
+        android:ems="10"
+        android:hint="Soyad"
+        android:inputType="textPersonName"
+        app:layout_constraintEnd_toEndOf="@+id/editname"
+        app:layout_constraintStart_toStartOf="@+id/editname"
+        app:layout_constraintTop_toBottomOf="@+id/editname" />
+
+    <EditText
+        android:id="@+id/adgunu"
+        android:layout_width="236dp"
+        android:layout_height="54dp"
+        android:layout_marginTop="30dp"
+        android:ems="10"
+        android:hint="Dogum Gunu"
+        android:inputType="date"
+        android:textAlignment="viewStart"
+        android:textSize="20sp"
+        app:layout_constraintEnd_toEndOf="@+id/editsurname"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="@+id/editsurname"
+        app:layout_constraintTop_toBottomOf="@+id/editsurname" />
+
+    <Spinner
+        android:id="@+id/spinner"
+        android:layout_width="236dp"
+        android:layout_height="54dp"
+        android:layout_marginTop="30dp"
+        android:tooltipText="Cins"
+        app:layout_constraintEnd_toEndOf="@+id/adgunu"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="@+id/adgunu"
+        app:layout_constraintTop_toBottomOf="@+id/adgunu" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

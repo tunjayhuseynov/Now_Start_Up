@@ -8,6 +8,7 @@ import android.content.pm.PackageManager;
 import android.graphics.Camera;
 import android.location.Location;
 import android.os.Bundle;
+import android.util.Base64;
 import android.widget.Toast;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
@@ -31,6 +32,8 @@ public class CameraResult extends AppCompatActivity {
     private FusedLocationProviderClient fusedLocationClient;
     private float lat;
     private float lon;
+    private String username = "Nowteam";
+    private String password = "5591980now";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -88,24 +91,28 @@ public class CameraResult extends AppCompatActivity {
 
                 JsonApi jsonApi = retrofit.create(JsonApi.class);
                 Map<String, String> parameters = new HashMap<>();
-                final Call<List<QRcode>> barcodeList = jsonApi.getBarcodeList();
 
-                barcodeList.enqueue(new Callback<List<QRcode>>() {
+                String base = username + ":" + password;
+                String authhead = "Basic " + Base64.encodeToString(base.getBytes(), Base64.NO_WRAP);
+
+                final Call<QRcode> barcodeList = jsonApi.getBarcodeList(authhead, result.getContents());
+
+
+                barcodeList.enqueue(new Callback<QRcode>() {
                     @Override
-                    public void onResponse(Call<List<QRcode>> call, Response<List<QRcode>> response) {
+                    public void onResponse(Call<QRcode> call, Response<QRcode> response) {
                         if(!response.isSuccessful()){ Toast.makeText(CameraResult.this, "Cekilisde Xeta", Toast.LENGTH_LONG).show(); return;}
-                        List<QRcode> qRcodes = response.body();
+                        QRcode qRcodes = response.body();
                         assert qRcodes != null;
-                        for (int i = 0; i < qRcodes.size(); i++){
-                            QRcode anItemOfList = qRcodes.get(i);
-                            if(anItemOfList.getCode().equals(result.getContents()) && anItemOfList.getxCoordination() > lat -0.1 && anItemOfList.getxCoordination() < lat+0.1 && anItemOfList.getyCoordination() > lon-0.1 && anItemOfList.getyCoordination() < lon+0.1){
-                                Toast.makeText(CameraResult.this, "Bonus Kocuruldu", Toast.LENGTH_LONG).show();
-                            }
+                        if(qRcodes.getCode().equals(result.getContents()) && qRcodes.getxCoordination() > lat -0.005 && qRcodes.getxCoordination() < lat+0.005 && qRcodes.getyCoordination() > lon-0.005 && qRcodes.getyCoordination() < lon+0.005){
+                            Toast.makeText(CameraResult.this, "Bonus Kocuruldu", Toast.LENGTH_LONG).show();
+                        }else{
+                            Toast.makeText(CameraResult.this, "QR Code Movcud Deyil", Toast.LENGTH_LONG).show();
                         }
                     }
 
                     @Override
-                    public void onFailure(Call<List<QRcode>> call, Throwable t) {
+                    public void onFailure(Call<QRcode> call, Throwable t) {
 
                     }
                 });

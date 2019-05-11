@@ -10,8 +10,6 @@ import android.widget.EditText;
 
 public class LogIn extends AppCompatActivity {
 
-    private Button registration;
-    private Button login;
     private EditText number;
     private EditText pass;
 
@@ -24,8 +22,8 @@ public class LogIn extends AppCompatActivity {
         number = findViewById(R.id.number);
         pass = findViewById(R.id.pass);
 
-        registration = findViewById(R.id.qeydiyyat);
-        login = findViewById(R.id.daxilol);
+        Button registration = findViewById(R.id.qeydiyyat);
+        Button login = findViewById(R.id.daxilol);
 
         registration.setOnClickListener(new View.OnClickListener() {
             @Override

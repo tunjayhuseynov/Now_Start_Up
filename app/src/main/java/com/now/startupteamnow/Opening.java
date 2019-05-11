@@ -22,7 +22,7 @@ public class Opening extends AppCompatActivity {
         SharedPreferences sp = this.getSharedPreferences("Login", MODE_PRIVATE);
         if(sp.getString("token",null) == null && sp.getInt("id",0)== 0){
 
-            //Go Registartion
+            //Go Login
             Intent GoRegister = new Intent(Opening.this, LogIn.class);
             startActivity(GoRegister);
 

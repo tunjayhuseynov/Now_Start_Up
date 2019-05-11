@@ -12,6 +12,12 @@
 
     <uses-feature android:name="android.hardware.camera2.full" />
 
+    <supports-screens
+    android:smallScreens="true"
+    android:normalScreens="true"
+    android:largeScreens="true"
+    android:xlargeScreens="true" />
+
     <application
         android:allowBackup="false"
         android:hardwareAccelerated="true"
@@ -21,23 +27,24 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
         tools:ignore="GoogleAppIndexingWarning">
-        <activity android:name=".LogIn"></activity>
-        <activity android:name=".Registration" />
-        <activity android:name=".Opening">
-
-        </activity>
-        <activity android:name=".CameraResult" />
-        <activity
-            android:name=".ScanCamera"
-            android:screenOrientation="fullUser"
-            tools:replace="screenOrientation" />
-        <activity android:name=".HomePage" >
+        <activity android:name=".CreateNewProfile">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity android:name=".LogIn" />
+        <activity android:name=".Registration">
+
+        </activity>
+        <activity android:name=".Opening" />
+        <activity android:name=".CameraResult" />
+        <activity
+            android:name=".ScanCamera"
+            android:screenOrientation="fullUser"
+            tools:replace="screenOrientation" />
+        <activity android:name=".HomePage" />
         <activity android:name=".Check" />
 
         <meta-data
