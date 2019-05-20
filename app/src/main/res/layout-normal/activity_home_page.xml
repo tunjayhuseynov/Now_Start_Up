@@ -53,7 +53,7 @@
                 android:layout_height="match_parent">
 
                 <ImageView
-                    android:id="@+id/imageView"
+                    android:id="@+id/profilimage"
                     android:layout_width="150dp"
                     android:layout_height="150dp"
                     android:adjustViewBounds="true"
@@ -61,14 +61,14 @@
                     android:padding="5dp"
                     android:scaleType="fitXY"
                     android:src="@drawable/zeynal"
-                    app:layout_constraintEnd_toEndOf="@+id/name"
+                    app:layout_constraintEnd_toEndOf="@+id/fullname"
                     app:layout_constraintHorizontal_bias="0.0"
-                    app:layout_constraintStart_toStartOf="@+id/name"
-                    app:layout_constraintTop_toBottomOf="@+id/name"
+                    app:layout_constraintStart_toStartOf="@+id/fullname"
+                    app:layout_constraintTop_toBottomOf="@+id/fullname"
                     tools:srcCompat="@tools:sample/avatars" />
 
                 <TextView
-                    android:id="@+id/name"
+                    android:id="@+id/fullname"
                     android:layout_width="344dp"
                     android:layout_height="37dp"
                     android:layout_marginStart="8dp"
@@ -93,9 +93,8 @@
                     android:id="@+id/textView"
                     android:layout_width="129dp"
                     android:layout_height="41dp"
-                    android:layout_marginStart="8dp"
-                    android:layout_marginTop="8dp"
-                    android:layout_marginEnd="8dp"
+                    android:layout_marginTop="16dp"
+                    android:layout_marginEnd="20dp"
                     android:fontFamily="@font/baloo"
                     android:text="Bonus:"
                     android:textAlignment="center"
@@ -103,9 +102,10 @@
                     android:textColor="@color/white"
                     android:textSize="30sp"
                     android:textStyle="bold"
-                    app:layout_constraintEnd_toEndOf="@+id/name"
-                    app:layout_constraintStart_toEndOf="@+id/imageView"
-                    app:layout_constraintTop_toBottomOf="@+id/name" />
+                    app:layout_constraintEnd_toEndOf="@+id/fullname"
+                    app:layout_constraintHorizontal_bias="1.0"
+                    app:layout_constraintStart_toEndOf="@id/profilimage"
+                    app:layout_constraintTop_toBottomOf="@+id/fullname" />
 
                 <TextView
                     android:id="@+id/amount"
@@ -113,7 +113,6 @@
                     android:layout_height="50dp"
                     android:layout_marginStart="8dp"
                     android:layout_marginTop="8dp"
-                    android:layout_marginEnd="8dp"
                     android:fontFamily="@font/baloo"
                     android:text="50"
                     android:textAlignment="center"
@@ -121,8 +120,8 @@
                     android:textSize="27sp"
                     android:textStyle="bold"
                     app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintHorizontal_bias="0.0"
-                    app:layout_constraintStart_toEndOf="@+id/imageView"
+                    app:layout_constraintHorizontal_bias="1.0"
+                    app:layout_constraintStart_toEndOf="@+id/profilimage"
                     app:layout_constraintTop_toBottomOf="@+id/textView" />
             </androidx.constraintlayout.widget.ConstraintLayout>
 
@@ -146,6 +145,12 @@
         </com.google.android.material.tabs.TabLayout>
 
     </com.google.android.material.appbar.AppBarLayout>
+
+    <ProgressBar
+        android:id="@+id/progressBar3"
+        android:layout_width="match_parent"
+        android:indeterminateDrawable="@drawable/progress"
+        android:layout_height="270dp" />
 
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

@@ -9,17 +9,19 @@ import android.location.Location;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Bundle;
-import android.os.Environment;
 import android.provider.Settings;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
-import android.view.TextureView;
+import android.view.View;
+import android.widget.ImageView;
+import android.widget.ProgressBar;
+import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.Toolbar;
 import androidx.core.app.ActivityCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
@@ -34,18 +36,27 @@ import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.material.tabs.TabLayout;
+import com.squareup.picasso.Picasso;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+import retrofit2.Retrofit;
+import retrofit2.converter.gson.GsonConverterFactory;
 
 
 public class HomePage extends AppCompatActivity {
 
 
-    private Toolbar toolbar;
+    private TextView fullname;
+    private TextView amount;
+    private ImageView profileImage;
+    private ProgressBar bar;
+
     public  String res;
-    private static final String TAG = "AndroidCameraApi";
     private FusedLocationProviderClient fusedLocationClient;
     private LocationCallback locationCallback;
     private static final int PLAY_SERVICES_RESOLUTION_REQUEST = 9000;
@@ -57,36 +68,101 @@ public class HomePage extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home_page);
-        ViewPager viewPager = findViewById(R.id.ViewPager);
-        setupViewPager(viewPager);
 
-        TabLayout tabLayout = findViewById(R.id.tabs);
-        tabLayout.setupWithViewPager(viewPager);
+        try{
+            fullname = findViewById(R.id.fullname);
+            amount = findViewById(R.id.amount);
+            profileImage = findViewById(R.id.profilimage);
+            bar = findViewById(R.id.progressBar3);
 
-        if(!isOnline()){ Toast.makeText(HomePage.this, "Internet Yoxdur", Toast.LENGTH_LONG).show();  return;}
+            fullname.setText("");
+            amount.setText("");
+            profileImage.setVisibility(View.INVISIBLE);
 
-        if (!checkPlayServices()){
-            buildAlertMessageNoGoogleService();
+
+
+            ViewPager viewPager = findViewById(R.id.ViewPager);
+            setupViewPager(viewPager);
+
+            TabLayout tabLayout = findViewById(R.id.tabs);
+            tabLayout.setupWithViewPager(viewPager);
+
+            if(!isOnline()){ Toast.makeText(HomePage.this, "Internet Yoxdur", Toast.LENGTH_LONG).show();  return;}
+
+
+
+            if (!checkPlayServices()){
+                buildAlertMessageNoGoogleService();
+            }
+
+
+            fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
+            startLocationUpdates();
+
+            GetUserInfo();
+
         }
-
-
-        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
-        startLocationUpdates();
+        catch (Exception e){
+            Toast.makeText(this, e.toString(), Toast.LENGTH_LONG).show();
+        }
 
 
 
 
     }
 
+    private void GetUserInfo(){
+        Intent intent = getIntent();
+        String token = intent.getStringExtra("token");
+        int id = intent.getIntExtra("id", 0);
+        String authhead = "Basic Tm93dGVhbTo1NTkxOTgwTm93";
+
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl(BuildConfig.BASE_URL)
+                .addConverterFactory(GsonConverterFactory.create())
+                .build();
+
+        JsonApi jsonApi = retrofit.create(JsonApi.class);
+
+
+
+        final Call<User> user = jsonApi.getUserWithPost(authhead,id,token);
+
+        user.enqueue(new Callback<User>() {
+            @Override
+            public void onResponse(@NonNull Call<User> call, @NonNull Response<User> response) {
+                if(!response.isSuccessful()){
+                    fullname.setText("Error");
+                    return;
+                }
+
+                bar.setVisibility(View.INVISIBLE);
+                profileImage.setVisibility(View.VISIBLE);
+
+                if(response.body() != null){
+                    User user1 = response.body();
+                    if(user1.getId() > 0 && user1.getToken() != null){
+                        String FullName = user1.getName() + " " + user1.getSurname();
+                        Picasso.get().load(BuildConfig.BASE_URL + "images/"+user1.getImgPath()).into(profileImage);
+                        String textBonus = String.valueOf(user1.getBonus());
+                        amount.setText(textBonus);
+                        fullname.setText(FullName);
+                    }
+                }
+            }
+
+
+            @Override
+            public void onFailure(@NonNull Call<User> call, @NonNull Throwable t) {
+                fullname.setText(t.getMessage());
+            }
+        });
+    }
 
     public boolean isOnline() {
         ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo netInfo = cm.getActiveNetworkInfo();
-        if (netInfo != null && netInfo.isConnectedOrConnecting()) {
-            return true;
-        } else {
-            return false;
-        }
+        return netInfo != null && netInfo.isConnectedOrConnecting();
     }
 
     @Override
@@ -135,10 +211,12 @@ public class HomePage extends AppCompatActivity {
         private final List<Fragment> mFragmentList = new ArrayList<>();
         private final List<String> mFragmentTitleList = new ArrayList<>();
 
-        public ViewPagerAdapter(FragmentManager manager) {
+        ViewPagerAdapter(FragmentManager manager) {
             super(manager);
         }
 
+
+        @NonNull
         @Override
         public Fragment getItem(int position) {
             return mFragmentList.get(position);
@@ -149,7 +227,8 @@ public class HomePage extends AppCompatActivity {
             return mFragmentList.size();
         }
 
-        public void addFragment(Fragment fragment, String title) {
+        void addFragment(Fragment fragment, String title) {
+
             mFragmentList.add(fragment);
             mFragmentTitleList.add(title);
         }
@@ -196,7 +275,7 @@ public class HomePage extends AppCompatActivity {
                         }
                     }
 
-                    ;
+
 
                 };
                 fusedLocationClient.requestLocationUpdates(locationRequest,locationCallback, null);
@@ -280,7 +359,7 @@ public class HomePage extends AppCompatActivity {
     }
 
     @Override
-    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         // If request is cancelled, the result arrays are empty.
         if (requestCode == 0) {
             if (grantResults.length > 0
@@ -292,7 +371,6 @@ public class HomePage extends AppCompatActivity {
 
                 isLocGranted = false;
             }
-            return;
         }
     }
 }

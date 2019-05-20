@@ -37,8 +37,8 @@ public class LogIn extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 Intent check = new Intent(LogIn.this, Check.class);
-                check.putExtra("number",number.getText());
-                check.putExtra("pass", pass.getText());
+                check.putExtra("number",number.getText().toString());
+                check.putExtra("pass", pass.getText().toString());
                 startActivity(check);
             }
         });

@@ -14,7 +14,7 @@
         android:layout_marginTop="8dp"
         android:layout_marginBottom="8dp"
         android:src="@drawable/zeynal"
-        app:layout_constraintBottom_toTopOf="@+id/name"
+        app:layout_constraintBottom_toTopOf="@+id/fullname"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
@@ -36,7 +36,7 @@
         app:layout_constraintTop_toBottomOf="@+id/uploadedpc" />
 
     <EditText
-        android:id="@+id/editname"
+        android:id="@+id/EditName"
         android:layout_width="215dp"
         android:layout_height="40dp"
         android:layout_marginTop="30dp"
@@ -50,16 +50,16 @@
         />
 
     <EditText
-        android:id="@+id/editsurname"
+        android:id="@+id/EditSurname"
         android:layout_width="215dp"
         android:layout_height="40dp"
         android:layout_marginTop="30dp"
         android:ems="10"
         android:hint="Soyad"
         android:inputType="textCapSentences"
-        app:layout_constraintEnd_toEndOf="@+id/editname"
-        app:layout_constraintStart_toStartOf="@+id/editname"
-        app:layout_constraintTop_toBottomOf="@+id/editname" />
+        app:layout_constraintEnd_toEndOf="@+id/EditName"
+        app:layout_constraintStart_toStartOf="@+id/EditName"
+        app:layout_constraintTop_toBottomOf="@+id/EditName" />
 
     <EditText
         android:id="@+id/adgunu"
@@ -71,10 +71,10 @@
         android:inputType="date"
         android:textAlignment="viewStart"
         android:textSize="19sp"
-        app:layout_constraintEnd_toEndOf="@+id/editsurname"
+        app:layout_constraintEnd_toEndOf="@+id/EditSurname"
         app:layout_constraintHorizontal_bias="0.0"
-        app:layout_constraintStart_toStartOf="@+id/editsurname"
-        app:layout_constraintTop_toBottomOf="@+id/editsurname" />
+        app:layout_constraintStart_toStartOf="@+id/EditSurname"
+        app:layout_constraintTop_toBottomOf="@+id/EditSurname" />
 
     <Spinner
         android:id="@+id/spinner"

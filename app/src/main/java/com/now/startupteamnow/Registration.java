@@ -1,5 +1,6 @@
 package com.now.startupteamnow;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Intent;
@@ -21,7 +22,7 @@ import retrofit2.converter.gson.GsonConverterFactory;
 
 public class Registration extends AppCompatActivity {
 
-    String emailPattern = "[a-zA-Z0-9._-]+@[a-z]+\\.+[a-z]+";
+    String emailPattern = "[a-zA-Z0-9._-]+@[a-z]+\\.+[a-z.]+";
     private Button ireli;
     private boolean telready = false;
     private boolean mailready =false;
@@ -69,37 +70,41 @@ public class Registration extends AppCompatActivity {
                 JsonApi jsonApi = retrofit.create(JsonApi.class);
 
 
-                UserInput userInput = new UserInput(tel.getText().toString(), pass.getText().toString());
+                //UserInput userInput = new UserInput(tel.getText().toString(), pass.getText().toString());
 
                 String base = username + ":" + password;
                 String authhead = "Basic " + Base64.encodeToString(base.getBytes(), Base64.NO_WRAP);
-                final Call<CheckResponse> call = jsonApi.postCheckUser( authhead,userInput);
+                final Call<CheckResponse> call = jsonApi.CheckUser( authhead, tel.getText().toString(), pass.getText().toString());
 
                 call.enqueue(new Callback<CheckResponse>() {
                     @Override
-                    public void onResponse(Call<CheckResponse> call, Response<CheckResponse> response) {
+                    public void onResponse(@NonNull Call<CheckResponse> call, @NonNull Response<CheckResponse> response) {
                         if(!response.isSuccessful()){
                             Toast.makeText(Registration.this, "Serverdə Xəta Var", Toast.LENGTH_LONG).show();
                         }else{
                             CheckResponse checkResponse = response.body();
                             assert checkResponse != null;
+
                             if(!checkResponse.isFound()){
                                 Intent next = new Intent(Registration.this, CreateNewProfile.class);
                                 next.putExtra("telefon", tel.getText().toString());
                                 next.putExtra("email", mail.getText().toString());
                                 next.putExtra("password", pass.getText().toString());
+                                //Toast.makeText(Registration.this,"Tebrikler", Toast.LENGTH_LONG).show();
                                 startActivity(next);
                             }else{
                                 Toast.makeText(Registration.this, "Belə Bir Nömrə Artıq Mövcutdur", Toast
                                 .LENGTH_LONG).show();
                             }
+                            ireli.setVisibility(View.VISIBLE);
+                            bar.setVisibility(View.INVISIBLE);
                         }
 
 
                     }
 
                     @Override
-                    public void onFailure(Call<CheckResponse> call, Throwable t) {
+                    public void onFailure(@NonNull Call<CheckResponse> call, @NonNull Throwable t) {
 
                     }
                 });
