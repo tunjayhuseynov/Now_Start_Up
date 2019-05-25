@@ -27,9 +27,8 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
         tools:ignore="GoogleAppIndexingWarning">
-        <activity android:name=".CreateNewProfile">
-
-        </activity>
+        <activity android:name=".CreateNewProfile"
+                  android:exported="true"/>
         <activity android:name=".LogIn" >
 
         </activity>

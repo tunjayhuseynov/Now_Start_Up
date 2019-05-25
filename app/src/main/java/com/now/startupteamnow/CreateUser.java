@@ -1,9 +1,12 @@
 package com.now.startupteamnow;
 
+import com.google.gson.annotations.SerializedName;
+
 import java.util.HashMap;
 import java.util.Map;
 
 class CreateUser {
+    @SerializedName("value")
     private Map<String, String> map = new HashMap<String, String>();
 
     private String PhoneNumber;
@@ -22,16 +25,16 @@ class CreateUser {
 
     private String Email;
 
-    public Map<String, String> getMap() {
+    Map<String, String> getMap() {
         return map;
     }
 
 
-    public String getPhoneNumber() {
+    String getPhoneNumber() {
         return PhoneNumber;
     }
 
-    public void setPhoneNumber(String phoneNumber) {
+    void setPhoneNumber(String phoneNumber) {
         PhoneNumber = phoneNumber;
         map.put("PhoneNumber", phoneNumber);
     }
@@ -45,29 +48,29 @@ class CreateUser {
         map.put("Name", name);
     }
 
-    public String getSurname() {
+    String getSurname() {
         return Surname;
     }
 
-    public void setSurname(String surname) {
+    void setSurname(String surname) {
         Surname = surname;
         map.put("Surname", surname);
     }
 
-    public String getDate() {
+    String getDate() {
         return Date;
     }
 
-    public void setDate(String date) {
+    void setDate(String date) {
         Date = date;
         map.put("Date", date);
     }
 
-    public String getImgName() {
+    String getImgName() {
         return ImgName;
     }
 
-    public void setImgName(String imgName) {
+    void setImgName(String imgName) {
         ImgName = imgName;
         map.put("ImgName", imgName);
     }
@@ -76,25 +79,25 @@ class CreateUser {
         return IsMale;
     }
 
-    public void setMale(boolean male) {
+    void setMale(boolean male) {
         IsMale = male;
         map.put("IsMale", String.valueOf(male));
     }
 
-    public String getPassword() {
+    String getPassword() {
         return Password;
     }
 
-    public void setPassword(String password) {
+    void setPassword(String password) {
         Password = password;
         map.put("Password", password);
     }
 
-    public String getEmail() {
+    String getEmail() {
         return Email;
     }
 
-    public void setEmail(String email) {
+    void setEmail(String email) {
         Email = email;
         map.put("Email", email);
     }

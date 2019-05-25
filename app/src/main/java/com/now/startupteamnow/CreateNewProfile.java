@@ -45,7 +45,7 @@ import retrofit2.converter.gson.GsonConverterFactory;
 public class CreateNewProfile extends AppCompatActivity {
 
     ImageView pc ;
-    private Uri image = null;
+    private Uri image;
     private String imageName;
     private String nameUser;
     private String surnameUser;
@@ -174,7 +174,9 @@ public class CreateNewProfile extends AppCompatActivity {
                     String authhead = "Basic Tm93dGVhbTo1NTkxOTgwTm93";
 
                     CreateUser user = new CreateUser();
-                    user.setDate(adgunu.getText().toString());
+                    String[] fixedAdgunu = adgunu.getText().toString().split("/");
+                    String AdGunuIsFixed = fixedAdgunu[1] + "/" + fixedAdgunu[0] + "/" + fixedAdgunu[2];
+                    user.setDate(AdGunuIsFixed);
                     user.setEmail(email);
                     user.setImgName(imageName);
                     user.setMale(spinner.getSelectedItem().toString().equals("Kişi"));
@@ -190,30 +192,29 @@ public class CreateNewProfile extends AppCompatActivity {
                     File imageFile = new File(getPath(image));
                     Log.d("Qanli Image", getPath(image));
                     // Create a request body with file and image media type
-                    RequestBody fileReqBody = RequestBody.create(MediaType.parse("image/*"), imageFile);
+                    RequestBody fileReqBody = RequestBody.create(MediaType.parse(Objects.requireNonNull(getContentResolver().getType(image))), imageFile);
                     // Create MultipartBody.Part using file request-body,file name and part name
-                    MultipartBody.Part part = MultipartBody.Part.createFormData("upload", imageFile.getName(), fileReqBody);
+                    MultipartBody.Part part = MultipartBody.Part.createFormData("file", imageFile.getName(), fileReqBody);
 
                     final Call<CheckResponse> call = jsonApi.postNewUser(authhead, part, user.getMap());
-
+                    Log.d("Qanli map", user.getMap().toString());
                     call.enqueue(new Callback<CheckResponse>() {
                         @Override
                         public void onResponse(@NonNull Call<CheckResponse> call, @NonNull Response<CheckResponse> response) {
                             if(!response.isSuccessful()){
                                 Toast.makeText(CreateNewProfile.this, "Serverdə Xəta Var", Toast.LENGTH_LONG).show();
+                                Log.d("Qanli ", response.message() + response.code());
                             }
 
                             if(response.body() != null){
                                 CheckResponse data = response.body();
-
+                                Log.d("Qanli", String.valueOf(data.getId()) + " " + data.getToken());
                                 SharedPreferences.Editor sp = getSharedPreferences("Login", MODE_PRIVATE).edit();
                                 sp.putInt("id", data.getId());
                                 sp.putString("token", data.getToken());
                                 sp.apply();
 
                                 Intent intent = new Intent(CreateNewProfile.this, HomePage.class);
-                                intent.putExtra("token", data.getToken());
-                                intent.putExtra("id", data.getId());
                                 startActivity(intent);
                             }
 
@@ -253,10 +254,10 @@ public class CreateNewProfile extends AppCompatActivity {
             if(data != null){
                 image = data.getData();
                 if(image != null){
-                    File file = new File(image.getPath());
+                    File file = new File(getPath(image));
                     imageName = file.getName();
 
-                    Picasso.get().load(image).into(pc);
+                    Picasso.get().load(file).into(pc);
                 }
             }
 

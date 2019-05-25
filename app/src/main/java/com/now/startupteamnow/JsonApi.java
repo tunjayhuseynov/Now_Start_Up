@@ -26,6 +26,6 @@ public interface JsonApi {
 
     @Multipart
     @POST("api/users")
-    Call<CheckResponse> postNewUser(@Header("Authorization") String auth, @Part MultipartBody.Part file, @QueryMap Map<String, String> createuser);
+    Call<CheckResponse> postNewUser(@Header("Authorization") String auth, @Part MultipartBody.Part file, @QueryMap Map<String, String> value);
 
 }

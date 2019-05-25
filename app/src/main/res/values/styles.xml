@@ -13,4 +13,9 @@
         <item name="android:fontFamily">@font/baloo</item>
     </style>
 
+    <style name="Toolbar.TitleText" parent="TextAppearance.Widget.AppCompat.Toolbar.Title">
+        <item name="android:textSize">20sp</item>
+        <item name="android:text">center</item>
+    </style>
+
 </resources>

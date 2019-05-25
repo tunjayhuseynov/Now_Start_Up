@@ -4,12 +4,14 @@ import android.Manifest;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.provider.Settings;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -22,12 +24,14 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
 import androidx.core.app.ActivityCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentPagerAdapter;
 import androidx.viewpager.widget.ViewPager;
 
+import com.bumptech.glide.Glide;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.android.gms.location.FusedLocationProviderClient;
@@ -36,10 +40,10 @@ import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.material.tabs.TabLayout;
-import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -63,6 +67,7 @@ public class HomePage extends AppCompatActivity {
     private static final long UPDATE_INTERVAL = 1000, FASTEST_INTERVAL = 1000;
     private String lat, lon;
     private static boolean isLocGranted;
+    private Toolbar mTopToolbar;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -74,6 +79,10 @@ public class HomePage extends AppCompatActivity {
             amount = findViewById(R.id.amount);
             profileImage = findViewById(R.id.profilimage);
             bar = findViewById(R.id.progressBar3);
+
+            mTopToolbar = findViewById(R.id.mToolbar);
+            setSupportActionBar(mTopToolbar);
+            Objects.requireNonNull(getSupportActionBar()).setDisplayShowTitleEnabled(false);
 
             fullname.setText("");
             amount.setText("");
@@ -103,7 +112,7 @@ public class HomePage extends AppCompatActivity {
 
         }
         catch (Exception e){
-            Toast.makeText(this, e.toString(), Toast.LENGTH_LONG).show();
+            Log.d("Qanli" ,e.toString());
         }
 
 
@@ -112,9 +121,11 @@ public class HomePage extends AppCompatActivity {
     }
 
     private void GetUserInfo(){
-        Intent intent = getIntent();
-        String token = intent.getStringExtra("token");
-        int id = intent.getIntExtra("id", 0);
+        SharedPreferences sp = this.getSharedPreferences("Login", MODE_PRIVATE);
+        String token = sp.getString("token", null);
+        int userid = sp.getInt("id", 0);
+
+
         String authhead = "Basic Tm93dGVhbTo1NTkxOTgwTm93";
 
         Retrofit retrofit = new Retrofit.Builder()
@@ -126,7 +137,7 @@ public class HomePage extends AppCompatActivity {
 
 
 
-        final Call<User> user = jsonApi.getUserWithPost(authhead,id,token);
+        final Call<User> user = jsonApi.getUserWithPost(authhead,userid,token);
 
         user.enqueue(new Callback<User>() {
             @Override
@@ -143,7 +154,10 @@ public class HomePage extends AppCompatActivity {
                     User user1 = response.body();
                     if(user1.getId() > 0 && user1.getToken() != null){
                         String FullName = user1.getName() + " " + user1.getSurname();
-                        Picasso.get().load(BuildConfig.BASE_URL + "images/"+user1.getImgPath()).into(profileImage);
+                        Glide.with(HomePage.this)
+                                .load(BuildConfig.BASE_URL + "images/"+user1.getImgPath())
+                                .fitCenter()
+                                .into(profileImage);
                         String textBonus = String.valueOf(user1.getBonus());
                         amount.setText(textBonus);
                         fullname.setText(FullName);
@@ -169,13 +183,17 @@ public class HomePage extends AppCompatActivity {
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.bottom_navigation_menu, menu);
-        return true;
+        //getMenuInflater().inflate(R.menu.toolbar_menu, menu);
+        return false;
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
 
         switch (item.getItemId()) {
+            case R.id.setting:
+                Log.d("Qanli", "Done");
+                return true;
             case R.id.new_game:
 
                 return true;

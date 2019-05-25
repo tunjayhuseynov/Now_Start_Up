@@ -14,11 +14,14 @@ import android.content.pm.PackageManager;
 import android.os.Bundle;
 
 import java.security.Permission;
+import java.sql.Array;
 import java.util.List;
 
 import static maes.tech.intentanim.CustomIntent.customType;
 
 public class Opening extends AppCompatActivity {
+
+
 
     private String[] Permissions = {Manifest.permission.INTERNET, Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.CAMERA, Manifest.permission.ACCESS_NETWORK_STATE};
     @Override
@@ -30,11 +33,13 @@ public class Opening extends AppCompatActivity {
             if (ContextCompat.checkSelfPermission(Opening.this, permission)!= PackageManager.PERMISSION_GRANTED) {
 
                 ActivityCompat.requestPermissions(Opening.this, Permissions,0);
+                return;
 
                 }
         }
 
-        CheckUser();
+                CheckUser();
+
 
     }
 
@@ -46,23 +51,29 @@ public class Opening extends AppCompatActivity {
                 if(grantResults.length > 0){
                     for (int result:grantResults) {
                         if(result == PackageManager.PERMISSION_DENIED){
-                            buildAlertMessageNoGps();
+                            buildAlertMessage();
+                            return;
                         }
                     }
+                    Intent same = new Intent(Opening.this, Opening.class);
+                    startActivity(same);
+
                 }
         }
     }
 
 
-    protected void buildAlertMessageNoGps() {
+    protected void buildAlertMessage() {
 
         final AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setMessage("Bütün İcazələr Təsdiq Edilmədən Tətbiqat İşləmir.\nZəhmət Olmasa, İcazələri Təsdiq Edəsiniz")
+        builder.setMessage("Bütün İcazələr Təsdiq Edilməlidir.\nZəhmət Olmasa, İcazələri Təsdiq Edəsiniz")
                 .setCancelable(false)
                 .setNegativeButton("Çıxış", new DialogInterface.OnClickListener() {
                     public void onClick(final DialogInterface dialog, final int id) {
-                        finish();
-
+                        //finish();
+                        //ActivityCompat.requestPermissions(Opening.this, Permissions,0);
+                        Intent same = new Intent(Opening.this, Opening.class);
+                        startActivity(same);
                     }
                 });
         final AlertDialog alert = builder.create();
@@ -73,7 +84,7 @@ public class Opening extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
 
-        finish();
+        //finish();
     }
 
 
@@ -88,11 +99,7 @@ public class Opening extends AppCompatActivity {
 
         }else{
             //Go Home with Auto-Log
-            String token = sp.getString("token", null);
-            int userid = sp.getInt("id", 0);
             Intent GoHome = new Intent(Opening.this, HomePage.class);
-            GoHome.putExtra("token", token);
-            GoHome.putExtra("id", userid);
             startActivity(GoHome);
             customType(this,"right-to-left");
         }
