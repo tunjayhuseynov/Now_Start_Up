@@ -1,17 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:android="http://schemas.android.com/apk/res/android">
-    <item android:id="@+id/new_game"
-        android:icon="@drawable/ic_launcher_background"
-        android:title="@string/app_name"
-        app:showAsAction="always"
-        android:visible="false"/>
-    <item android:id="@+id/camera"
+    <item android:id="@+id/history"
         android:onClick="onOptionsItemSelected"
-        android:icon="@drawable/camera"
-        android:title="Camera" />
-    <item android:id="@+id/help"
-        android:icon="@drawable/ic_launcher_background"
-        android:title="@string/app_name"
-        android:visible="false"/>
+        android:icon="@drawable/history"
+
+        android:visible="true"
+        android:title=""
+        app:showAsAction="ifRoom" />
+    <item android:id="@+id/main_menu"
+        android:title=""
+        android:enabled="false"
+        app:showAsAction="always"
+        android:visible="true"/>
+
+    <item android:id="@+id/list"
+        android:onClick="onOptionsItemSelected"
+        android:icon="@drawable/scanicons"
+        android:title=""
+        app:showAsAction="always"
+        android:visible="true"/>
 </menu>

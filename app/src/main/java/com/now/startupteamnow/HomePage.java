@@ -10,6 +10,7 @@ import android.location.Location;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Bundle;
+import android.os.Handler;
 import android.provider.Settings;
 import android.util.Log;
 import android.view.Menu;
@@ -32,6 +33,7 @@ import androidx.fragment.app.FragmentPagerAdapter;
 import androidx.viewpager.widget.ViewPager;
 
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.android.gms.location.FusedLocationProviderClient;
@@ -39,6 +41,9 @@ import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
+import com.google.android.material.bottomnavigation.BottomNavigationMenu;
+import com.google.android.material.bottomnavigation.BottomNavigationView;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.tabs.TabLayout;
 
 import java.util.ArrayList;
@@ -52,13 +57,16 @@ import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
 
+
+
 public class HomePage extends AppCompatActivity {
 
 
     private TextView fullname;
     private TextView amount;
-    private ImageView profileImage;
+    private ImageView profileImage, backImage;
     private ProgressBar bar;
+    private FloatingActionButton floatingActionButton;
 
     public  String res;
     private FusedLocationProviderClient fusedLocationClient;
@@ -75,10 +83,14 @@ public class HomePage extends AppCompatActivity {
         setContentView(R.layout.activity_home_page);
 
         try{
+
+            BottomNavigationView view = findViewById(R.id.bottom_navigation);
+            view.setSelectedItemId(R.id.main_menu);
             fullname = findViewById(R.id.fullname);
             amount = findViewById(R.id.amount);
             profileImage = findViewById(R.id.profilimage);
             bar = findViewById(R.id.progressBar3);
+            backImage = findViewById(R.id.BackImage);
 
             mTopToolbar = findViewById(R.id.mToolbar);
             setSupportActionBar(mTopToolbar);
@@ -158,6 +170,11 @@ public class HomePage extends AppCompatActivity {
                                 .load(BuildConfig.BASE_URL + "images/"+user1.getImgPath())
                                 .fitCenter()
                                 .into(profileImage);
+
+                        Glide.with(HomePage.this)
+                                .load(BuildConfig.BASE_URL + "images/"+user1.getImgPath())
+                                .transform(new BlurTransformation(getApplicationContext()))
+                                .into(backImage);
                         String textBonus = String.valueOf(user1.getBonus());
                         amount.setText(textBonus);
                         fullname.setText(FullName);
@@ -179,13 +196,28 @@ public class HomePage extends AppCompatActivity {
         return netInfo != null && netInfo.isConnectedOrConnecting();
     }
 
+    /*
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater = getMenuInflater();
-        inflater.inflate(R.menu.bottom_navigation_menu, menu);
+       // inflater.inflate(R.menu.bottom_navigation_menu, menu);
         //getMenuInflater().inflate(R.menu.toolbar_menu, menu);
         return false;
+    }*/
+
+    public void OpenCamera(View view){
+        if(!isLocGranted){
+            startLocationUpdates();
+        }
+        else if(!isLocationEnabled(HomePage.this)){
+            buildAlertMessageNoGps();
+        }else{
+            Intent intent = new Intent(this, CameraResult.class);
+            this.startActivity(intent);
+        }
     }
+
+
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
@@ -194,24 +226,15 @@ public class HomePage extends AppCompatActivity {
             case R.id.setting:
                 Log.d("Qanli", "Done");
                 return true;
-            case R.id.new_game:
+            case R.id.list:
 
                 return true;
-            case R.id.camera:
-                if(!isLocGranted){
-                    startLocationUpdates();
-                }
-                else if(!isLocationEnabled(HomePage.this)){
-                  buildAlertMessageNoGps();
-                }else{
-                    Intent intent = new Intent(this, CameraResult.class);
-                    this.startActivity(intent);
-                }
+            case R.id.history:
+
+
 
                 return true;
-            case R.id.help:
 
-                return true;
             default:
                 return super.onOptionsItemSelected(item);
         }
@@ -220,8 +243,8 @@ public class HomePage extends AppCompatActivity {
     private void setupViewPager(ViewPager viewPager) {
         ViewPagerAdapter adapter = new ViewPagerAdapter(getSupportFragmentManager());
         adapter.addFragment(new Tab1(), "Profil");
-        adapter.addFragment(new Tab2(), "List");
-        adapter.addFragment(new Tab3(), "Keçmiş");
+        //adapter.addFragment(new Tab2(), "List");
+        //adapter.addFragment(new Tab3(), "Keçmiş");
         viewPager.setAdapter(adapter);
     }
 
@@ -391,6 +414,15 @@ public class HomePage extends AppCompatActivity {
             }
         }
     }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+            startLocationUpdates();
+
+    }
+
+
 }
 
 

@@ -15,6 +15,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "835842332831-9aesqs506fena2smm4ii08fates59kl5.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.now.startupteamnow",
+            "certificate_hash": "0c4f48097d40cd429e934905ef678cc4ffea3400"
+          }
+        },
+        {
           "client_id": "835842332831-5phd2hmo77aja0otv86s03neu6t9jha5.apps.googleusercontent.com",
           "client_type": 3
         }
