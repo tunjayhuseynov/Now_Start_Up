@@ -208,7 +208,7 @@ public class CreateNewProfile extends AppCompatActivity {
 
                             if(response.body() != null){
                                 CheckResponse data = response.body();
-                                Log.d("Qanli", String.valueOf(data.getId()) + " " + data.getToken());
+                                Log.d("Qanli", data.getId() + " " + data.getToken());
                                 SharedPreferences.Editor sp = getSharedPreferences("Login", MODE_PRIVATE).edit();
                                 sp.putInt("id", data.getId());
                                 sp.putString("token", data.getToken());

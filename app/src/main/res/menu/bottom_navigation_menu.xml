@@ -4,7 +4,6 @@
     <item android:id="@+id/history"
         android:onClick="onOptionsItemSelected"
         android:icon="@drawable/history"
-
         android:visible="true"
         android:title=""
         app:showAsAction="ifRoom" />

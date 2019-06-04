@@ -11,11 +11,18 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.net.Uri;
 import android.os.Bundle;
 
 import java.security.Permission;
 import java.sql.Array;
 import java.util.List;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+import retrofit2.Retrofit;
+import retrofit2.converter.gson.GsonConverterFactory;
 
 import static maes.tech.intentanim.CustomIntent.customType;
 
@@ -38,7 +45,7 @@ public class Opening extends AppCompatActivity {
                 }
         }
 
-                CheckUser();
+                CheckUpdate();
 
 
     }
@@ -68,7 +75,7 @@ public class Opening extends AppCompatActivity {
         final AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setMessage("Bütün İcazələr Təsdiq Edilməlidir.\nZəhmət Olmasa, İcazələri Təsdiq Edəsiniz")
                 .setCancelable(false)
-                .setNegativeButton("Çıxış", new DialogInterface.OnClickListener() {
+                .setNegativeButton("Yenidən", new DialogInterface.OnClickListener() {
                     public void onClick(final DialogInterface dialog, final int id) {
                         //finish();
                         //ActivityCompat.requestPermissions(Opening.this, Permissions,0);
@@ -96,6 +103,7 @@ public class Opening extends AppCompatActivity {
             //Go Login
             Intent GoRegister = new Intent(Opening.this, LogIn.class);
             startActivity(GoRegister);
+            customType(this,"right-to-left");
 
         }else{
             //Go Home with Auto-Log
@@ -103,5 +111,61 @@ public class Opening extends AppCompatActivity {
             startActivity(GoHome);
             customType(this,"right-to-left");
         }
+    }
+
+    private void CheckUpdate(){
+
+        String authhead = "Basic Tm93dGVhbTo1NTkxOTgwTm93";
+
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl(BuildConfig.BASE_URL)
+                .addConverterFactory(GsonConverterFactory.create())
+                .build();
+
+        JsonApi jsonApi = retrofit.create(JsonApi.class);
+
+
+
+        final Call<Boolean> call = jsonApi.CheckUpdate(authhead);
+
+        call.enqueue(new Callback<Boolean>() {
+            @Override
+            public void onResponse(Call<Boolean> call, Response<Boolean> response) {
+                if(!response.isSuccessful()){}
+
+                if(response.body() != null){
+                    Boolean bool = response.body();
+                    if(bool){
+                        UpdateAlert();
+                    }else{
+                        CheckUser();
+                    }
+                }
+            }
+
+            @Override
+            public void onFailure(Call<Boolean> call, Throwable t) {
+
+            }
+        });
+    }
+
+    protected void UpdateAlert() {
+
+        final AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setMessage("Tətbiqatı Yeni Versiyaya Yüksəldin:")
+                .setCancelable(false)
+                .setPositiveButton("Yüksəlt", new DialogInterface.OnClickListener() {
+                    public void onClick(final DialogInterface dialog, final int id) {
+                        final String appPackageName = getPackageName(); // getPackageName() from Context or Activity object
+                        try {
+                            startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=" + appPackageName)));
+                        } catch (android.content.ActivityNotFoundException anfe) {
+                            startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=" + appPackageName)));
+                        }
+                    }
+                });
+        final AlertDialog alert = builder.create();
+        alert.show();
     }
 }

@@ -27,6 +27,8 @@ import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
+import static maes.tech.intentanim.CustomIntent.customType;
+
 public class CameraResult extends AppCompatActivity {
 
     private FusedLocationProviderClient fusedLocationClient;
@@ -121,4 +123,5 @@ public class CameraResult extends AppCompatActivity {
             super.onActivityResult(requestCode, resultCode, data);
         }
     }
+
 }

@@ -10,7 +10,6 @@ import android.location.Location;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Bundle;
-import android.os.Handler;
 import android.provider.Settings;
 import android.util.Log;
 import android.view.Menu;
@@ -41,13 +40,11 @@ import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
-import com.google.android.material.bottomnavigation.BottomNavigationMenu;
+import com.google.android.material.appbar.CollapsingToolbarLayout;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
-import com.google.android.material.tabs.TabLayout;
 
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Objects;
 
 import retrofit2.Call;
@@ -56,10 +53,10 @@ import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
+import static maes.tech.intentanim.CustomIntent.customType;
 
 
-
-public class HomePage extends AppCompatActivity {
+public class HomePage extends AppCompatActivity  {
 
 
     private TextView fullname;
@@ -76,6 +73,8 @@ public class HomePage extends AppCompatActivity {
     private String lat, lon;
     private static boolean isLocGranted;
     private Toolbar mTopToolbar;
+    private ViewPager viewPager;
+    private BottomNavigationView view;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -84,8 +83,15 @@ public class HomePage extends AppCompatActivity {
 
         try{
 
-            BottomNavigationView view = findViewById(R.id.bottom_navigation);
+            CollapsingToolbarLayout collapsingToolbarLayout = findViewById(R.id.collapsingtool);
+
+
+
+
+             view = findViewById(R.id.bottom_navigation);
+
             view.setSelectedItemId(R.id.main_menu);
+
             fullname = findViewById(R.id.fullname);
             amount = findViewById(R.id.amount);
             profileImage = findViewById(R.id.profilimage);
@@ -101,12 +107,12 @@ public class HomePage extends AppCompatActivity {
             profileImage.setVisibility(View.INVISIBLE);
 
 
-
-            ViewPager viewPager = findViewById(R.id.ViewPager);
+            /*
+            viewPager = findViewById(R.id.ViewPager);
             setupViewPager(viewPager);
 
             TabLayout tabLayout = findViewById(R.id.tabs);
-            tabLayout.setupWithViewPager(viewPager);
+            tabLayout.setupWithViewPager(viewPager);*/
 
             if(!isOnline()){ Toast.makeText(HomePage.this, "Internet Yoxdur", Toast.LENGTH_LONG).show();  return;}
 
@@ -122,6 +128,31 @@ public class HomePage extends AppCompatActivity {
 
             GetUserInfo();
 
+
+            view.setOnNavigationItemSelectedListener(new BottomNavigationView.OnNavigationItemSelectedListener() {
+                @Override
+                public boolean onNavigationItemSelected(@NonNull MenuItem item) {
+                    switch (item.getItemId()) {
+                        case R.id.list:
+                            Intent intent = new Intent(HomePage.this, List.class);
+                            startActivity(intent);
+                            customType(HomePage.this,"left-to-right");
+
+                            return true;
+                        case R.id.history:
+
+                            Intent intent2 = new Intent(HomePage.this, History.class);
+                            startActivity(intent2);
+                            customType(HomePage.this,"right-to-left");
+
+                            return true;
+
+                        default:
+                            return true;
+                    }
+                }
+            });
+
         }
         catch (Exception e){
             Log.d("Qanli" ,e.toString());
@@ -131,6 +162,9 @@ public class HomePage extends AppCompatActivity {
 
 
     }
+
+
+
 
     private void GetUserInfo(){
         SharedPreferences sp = this.getSharedPreferences("Login", MODE_PRIVATE);
@@ -169,11 +203,13 @@ public class HomePage extends AppCompatActivity {
                         Glide.with(HomePage.this)
                                 .load(BuildConfig.BASE_URL + "images/"+user1.getImgPath())
                                 .fitCenter()
+                                .diskCacheStrategy(DiskCacheStrategy.ALL)
                                 .into(profileImage);
 
                         Glide.with(HomePage.this)
                                 .load(BuildConfig.BASE_URL + "images/"+user1.getImgPath())
                                 .transform(new BlurTransformation(getApplicationContext()))
+                                .diskCacheStrategy(DiskCacheStrategy.ALL)
                                 .into(backImage);
                         String textBonus = String.valueOf(user1.getBonus());
                         amount.setText(textBonus);
@@ -196,14 +232,14 @@ public class HomePage extends AppCompatActivity {
         return netInfo != null && netInfo.isConnectedOrConnecting();
     }
 
-    /*
+
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater = getMenuInflater();
-       // inflater.inflate(R.menu.bottom_navigation_menu, menu);
+         inflater.inflate(R.menu.bottom_navigation_menu, menu);
         //getMenuInflater().inflate(R.menu.toolbar_menu, menu);
         return false;
-    }*/
+    }
 
     public void OpenCamera(View view){
         if(!isLocGranted){
@@ -214,19 +250,18 @@ public class HomePage extends AppCompatActivity {
         }else{
             Intent intent = new Intent(this, CameraResult.class);
             this.startActivity(intent);
+            customType(HomePage.this,"fadein-to-fadeout");
         }
     }
 
-
+/*
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
 
         switch (item.getItemId()) {
-            case R.id.setting:
-                Log.d("Qanli", "Done");
-                return true;
             case R.id.list:
+                Log.d("qanli", "Done");
 
                 return true;
             case R.id.history:
@@ -238,19 +273,24 @@ public class HomePage extends AppCompatActivity {
             default:
                 return super.onOptionsItemSelected(item);
         }
-    }
+    }*/
 
+/*
     private void setupViewPager(ViewPager viewPager) {
         ViewPagerAdapter adapter = new ViewPagerAdapter(getSupportFragmentManager());
-        adapter.addFragment(new Tab1(), "Profil");
-        //adapter.addFragment(new Tab2(), "List");
-        //adapter.addFragment(new Tab3(), "Keçmiş");
+        adapter.addFragment(new Tab1(), "Keçmiş");
+        adapter.addFragment(new Tab2(), "Merkez");
+        adapter.addFragment(new Tab3(), "List");
         viewPager.setAdapter(adapter);
-    }
+    }*/
+
+
+/*
 
     class ViewPagerAdapter extends FragmentPagerAdapter {
         private final List<Fragment> mFragmentList = new ArrayList<>();
         private final List<String> mFragmentTitleList = new ArrayList<>();
+
 
         ViewPagerAdapter(FragmentManager manager) {
             super(manager);
@@ -279,7 +319,7 @@ public class HomePage extends AppCompatActivity {
             return mFragmentTitleList.get(position);
         }
     }
-
+*/
     private void startLocationUpdates() {
         try {
 
@@ -312,7 +352,7 @@ public class HomePage extends AppCompatActivity {
                         for (Location location : locationResult.getLocations()) {
                             lat = String.valueOf(location.getLatitude());
                             lon = String.valueOf(location.getLongitude());
-                            Toast.makeText(HomePage.this, lat + " Update " + lon, Toast.LENGTH_LONG).show();
+                            //Toast.makeText(HomePage.this, lat + " Update " + lon, Toast.LENGTH_LONG).show();
                         }
                     }
 
@@ -419,7 +459,7 @@ public class HomePage extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
             startLocationUpdates();
-
+        view.setSelectedItemId(R.id.main_menu);
     }
 
 

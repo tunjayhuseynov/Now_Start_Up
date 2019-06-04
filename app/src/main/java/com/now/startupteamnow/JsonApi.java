@@ -1,5 +1,6 @@
 package com.now.startupteamnow;
 
+import java.util.ArrayList;
 import java.util.Map;
 
 import okhttp3.MultipartBody;
@@ -21,8 +22,14 @@ public interface JsonApi {
     @GET("api/barcodelist/CheckBarcode")
     Call<QRcode> getBarcodeList(@Header("Authorization") String auth, @Body String code);
 
+    @GET("api/barcodelist/GetHistory")
+    Call<ArrayList<UserHistoryJson>> getHistory(@Header("Authorization") String auth, @Query("code") int code);
+
     @GET("api/users/CheckUser")
     Call<CheckResponse> CheckUser(@Header("Authorization") String auth, @Query("Number") String Number, @Query("Password") String Password);
+
+    @GET("api/update")
+    Call<Boolean> CheckUpdate(@Header("Authorization") String auth);
 
     @Multipart
     @POST("api/users")

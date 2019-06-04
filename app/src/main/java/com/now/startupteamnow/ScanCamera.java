@@ -1,5 +1,6 @@
 package com.now.startupteamnow;
 
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.view.View;
@@ -11,6 +12,8 @@ import com.journeyapps.barcodescanner.BarcodeView;
 import com.journeyapps.barcodescanner.CaptureManager;
 import com.journeyapps.barcodescanner.DecoratedBarcodeView;
 import com.journeyapps.barcodescanner.ViewfinderView;
+
+import static maes.tech.intentanim.CustomIntent.customType;
 
 public class ScanCamera extends AppCompatActivity implements DecoratedBarcodeView.TorchListener {
 
@@ -93,4 +96,12 @@ public class ScanCamera extends AppCompatActivity implements DecoratedBarcodeVie
     }
 
 
+    @Override
+    public void onBackPressed() {
+        Intent intent = new Intent(ScanCamera.this, HomePage.class);
+        this.startActivity(intent);
+        customType(ScanCamera.this,"fadein-to-fadeout");
+
+        super.onBackPressed();
+    }
 }
