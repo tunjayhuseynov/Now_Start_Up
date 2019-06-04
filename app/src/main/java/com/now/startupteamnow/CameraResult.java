@@ -4,6 +4,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.Manifest;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Camera;
 import android.location.Location;
@@ -108,6 +109,7 @@ public class CameraResult extends AppCompatActivity {
                         assert qRcodes != null;
                         if(qRcodes.getCode().equals(result.getContents()) && qRcodes.getxCoordination() > lat -0.005 && qRcodes.getxCoordination() < lat+0.005 && qRcodes.getyCoordination() > lon-0.005 && qRcodes.getyCoordination() < lon+0.005){
                             Toast.makeText(CameraResult.this, "Bonus Kocuruldu", Toast.LENGTH_LONG).show();
+
                         }else{
                             Toast.makeText(CameraResult.this, "QR Code Movcud Deyil", Toast.LENGTH_LONG).show();
                         }
@@ -122,6 +124,45 @@ public class CameraResult extends AppCompatActivity {
         } else {
             super.onActivityResult(requestCode, resultCode, data);
         }
+    }
+
+    private void PostBonus(int amount){
+        SharedPreferences sp = this.getSharedPreferences("Login", MODE_PRIVATE);
+        String token = sp.getString("token", null);
+        final int userid = sp.getInt("id", 0);
+
+
+        String authhead = "Basic Tm93dGVhbTo1NTkxOTgwTm93";
+
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl(BuildConfig.BASE_URL)
+                .addConverterFactory(GsonConverterFactory.create())
+                .build();
+
+        JsonApi jsonApi = retrofit.create(JsonApi.class);
+
+
+
+        final Call<Integer> request = jsonApi.postBonus(authhead,userid,token, amount);
+
+        request.enqueue(new Callback<Integer>() {
+            @Override
+            public void onResponse(Call<Integer> call, Response<Integer> response) {
+                if(!response.isSuccessful()) {return;}
+
+                if(response.body() != null){
+                    int res = response.body();
+                    if(res != -1){
+                        Toast.makeText(CameraResult.this, "Tamamlandı", Toast.LENGTH_LONG).show();
+                    }
+                }
+            }
+
+            @Override
+            public void onFailure(Call<Integer> call, Throwable t) {
+
+            }
+        });
     }
 
 }

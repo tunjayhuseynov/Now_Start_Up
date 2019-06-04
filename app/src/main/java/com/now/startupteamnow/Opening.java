@@ -14,9 +14,12 @@ import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
 
+import com.google.firebase.messaging.RemoteMessage;
+
 import java.security.Permission;
 import java.sql.Array;
 import java.util.List;
+import java.util.Map;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -49,6 +52,7 @@ public class Opening extends AppCompatActivity {
 
 
     }
+
 
     @Override
     public void onRequestPermissionsResult(int requestCode,

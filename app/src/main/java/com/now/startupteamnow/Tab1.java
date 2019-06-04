@@ -40,16 +40,6 @@ public class Tab1 extends Fragment {
     @Override
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         ArrayList<AnItem> exampleList = new ArrayList<>();
-        exampleList.add(new AnItem(R.drawable.scanicon, "Line 1", "Line 2"));
-
-        RecyclerView mRecyclerView = view.findViewById(R.id.HistoryRecycler);
-        mRecyclerView.setHasFixedSize(true);
-
-        RecyclerView.LayoutManager mLayoutManager = new LinearLayoutManager(getActivity());
-        RecyclerView.Adapter mAdapter = new ListAdapter(exampleList);
-
-        mRecyclerView.setLayoutManager(mLayoutManager);
-        mRecyclerView.setAdapter(mAdapter);
     }
 
 }

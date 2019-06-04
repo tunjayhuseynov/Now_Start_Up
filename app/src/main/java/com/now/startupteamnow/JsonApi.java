@@ -22,6 +22,9 @@ public interface JsonApi {
     @GET("api/barcodelist/CheckBarcode")
     Call<QRcode> getBarcodeList(@Header("Authorization") String auth, @Body String code);
 
+    @GET("api/company")
+    Call<ArrayList<CompanyInformation>> getCompanyList(@Header("Authorization") String auth);
+
     @GET("api/barcodelist/GetHistory")
     Call<ArrayList<UserHistoryJson>> getHistory(@Header("Authorization") String auth, @Query("code") int code);
 
@@ -35,4 +38,6 @@ public interface JsonApi {
     @POST("api/users")
     Call<CheckResponse> postNewUser(@Header("Authorization") String auth, @Part MultipartBody.Part file, @QueryMap Map<String, String> value);
 
+    @POST("api/process")
+    Call<Integer> postBonus(@Header("Authorization") String auth, @Body int id, String token, int value);
 }

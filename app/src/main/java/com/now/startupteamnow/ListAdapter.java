@@ -8,6 +8,9 @@ import android.widget.TextView;
 
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.engine.DiskCacheStrategy;
+
 import java.util.ArrayList;
 
 public class ListAdapter extends RecyclerView.Adapter<ListAdapter.ExampleViewHolder> {
@@ -41,7 +44,13 @@ public class ListAdapter extends RecyclerView.Adapter<ListAdapter.ExampleViewHol
     public void onBindViewHolder(ExampleViewHolder holder, int position) {
         AnItem currentItem = mExampleList.get(position);
 
-        holder.mImageView.setImageResource(currentItem.getImageResource());
+        //holder.mImageView.setImageResource(currentItem.getImageResource());
+
+        Glide.with(holder.mImageView.getContext())
+                .load(BuildConfig.BASE_URL + "images/companies/"+ currentItem.getImageResource())
+                .into(holder.mImageView);
+
+
         holder.mTextView1.setText(currentItem.getText1());
         holder.mTextView2.setText(currentItem.getText2());
     }
