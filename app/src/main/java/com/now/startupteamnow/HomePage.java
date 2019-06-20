@@ -4,11 +4,8 @@ import android.Manifest;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.location.Location;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.util.Log;
@@ -26,9 +23,6 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.app.ActivityCompat;
-import androidx.fragment.app.Fragment;
-import androidx.fragment.app.FragmentManager;
-import androidx.fragment.app.FragmentPagerAdapter;
 import androidx.viewpager.widget.ViewPager;
 
 import com.bumptech.glide.Glide;
@@ -40,31 +34,22 @@ import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
-import com.google.android.material.appbar.CollapsingToolbarLayout;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
-import java.util.ArrayList;
 import java.util.Objects;
 
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
-import retrofit2.Retrofit;
-import retrofit2.converter.gson.GsonConverterFactory;
 
 import static maes.tech.intentanim.CustomIntent.customType;
 
 
 public class HomePage extends AppCompatActivity  {
-
-
-    private TextView fullname;
-    private TextView amount;
+    private TextView fullname, amount;
     private ImageView profileImage, backImage;
     private ProgressBar bar;
-    private FloatingActionButton floatingActionButton;
-
     public  String res;
     private FusedLocationProviderClient fusedLocationClient;
     private LocationCallback locationCallback;
@@ -73,61 +58,28 @@ public class HomePage extends AppCompatActivity  {
     private String lat, lon;
     private static boolean isLocGranted;
     private Toolbar mTopToolbar;
-    private ViewPager viewPager;
     private BottomNavigationView view;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home_page);
-
         try{
-
-            CollapsingToolbarLayout collapsingToolbarLayout = findViewById(R.id.collapsingtool);
-
-
-
-
-             view = findViewById(R.id.bottom_navigation);
-
-            view.setSelectedItemId(R.id.main_menu);
-
-            fullname = findViewById(R.id.fullname);
-            amount = findViewById(R.id.amount);
-            profileImage = findViewById(R.id.profilimage);
-            bar = findViewById(R.id.progressBar3);
-            backImage = findViewById(R.id.BackImage);
-
-            mTopToolbar = findViewById(R.id.mToolbar);
-            setSupportActionBar(mTopToolbar);
-            Objects.requireNonNull(getSupportActionBar()).setDisplayShowTitleEnabled(false);
-
-            fullname.setText("");
-            amount.setText("");
-            profileImage.setVisibility(View.INVISIBLE);
-
-
-            /*
-            viewPager = findViewById(R.id.ViewPager);
-            setupViewPager(viewPager);
-
-            TabLayout tabLayout = findViewById(R.id.tabs);
-            tabLayout.setupWithViewPager(viewPager);*/
-
-            if(!isOnline()){ Toast.makeText(HomePage.this, "Internet Yoxdur", Toast.LENGTH_LONG).show();  return;}
-
-
-
+            FindAllWidgets();
             if (!checkPlayServices()){
                 buildAlertMessageNoGoogleService();
             }
 
+            setSupportActionBar(mTopToolbar);
+            Objects.requireNonNull(getSupportActionBar()).setDisplayShowTitleEnabled(false);
+
+            fullname.setText(""); amount.setText(""); profileImage.setVisibility(View.INVISIBLE);
+
 
             fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
+
             startLocationUpdates();
-
             GetUserInfo();
-
 
             view.setOnNavigationItemSelectedListener(new BottomNavigationView.OnNavigationItemSelectedListener() {
                 @Override
@@ -158,67 +110,34 @@ public class HomePage extends AppCompatActivity  {
             Log.d("Qanli" ,e.toString());
         }
 
-
-
-
     }
 
 
-
-
     private void GetUserInfo(){
-        SharedPreferences sp = this.getSharedPreferences("Login", MODE_PRIVATE);
-        String token = sp.getString("token", null);
-        int userid = sp.getInt("id", 0);
-
-
-        String authhead = "Basic Tm93dGVhbTo1NTkxOTgwTm93";
-
-        Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl(BuildConfig.BASE_URL)
-                .addConverterFactory(GsonConverterFactory.create())
-                .build();
-
-        JsonApi jsonApi = retrofit.create(JsonApi.class);
-
-
-
-        final Call<User> user = jsonApi.getUserWithPost(authhead,userid,token);
+        JsonApi jsonApi = Request_And_API_Key.GetRetrofit().create(JsonApi.class);
+        final Call<User> user = jsonApi.getUserWithPost(Request_And_API_Key.Api_Key, Request_And_API_Key.GetId(this), Request_And_API_Key.GetToken(this));
 
         user.enqueue(new Callback<User>() {
             @Override
             public void onResponse(@NonNull Call<User> call, @NonNull Response<User> response) {
                 if(!response.isSuccessful()){
-                    fullname.setText("Error");
+                    Toast.makeText(HomePage.this, "Server İlə Əlaqədə Xəta Aşkarlandı", Toast.LENGTH_LONG).show();
                     return;
                 }
 
-                bar.setVisibility(View.INVISIBLE);
-                profileImage.setVisibility(View.VISIBLE);
+                bar.setVisibility(View.INVISIBLE); profileImage.setVisibility(View.VISIBLE);
 
                 if(response.body() != null){
                     User user1 = response.body();
                     if(user1.getId() > 0 && user1.getToken() != null){
                         String FullName = user1.getName() + " " + user1.getSurname();
-                        Glide.with(HomePage.this)
-                                .load(BuildConfig.BASE_URL + "images/"+user1.getImgPath())
-                                .fitCenter()
-                                .diskCacheStrategy(DiskCacheStrategy.ALL)
-                                .into(profileImage);
 
-                        Glide.with(HomePage.this)
-                                .load(BuildConfig.BASE_URL + "images/"+user1.getImgPath())
-                                .transform(new BlurTransformation(getApplicationContext()))
-                                .diskCacheStrategy(DiskCacheStrategy.ALL)
-                                .into(backImage);
-                        String textBonus = String.valueOf(user1.getBonus());
-                        amount.setText(textBonus);
-                        fullname.setText(FullName);
+                        ImageProcess(user1.getImgPath());
+
+                        String textBonus = String.valueOf(user1.getBonus()); amount.setText(textBonus); fullname.setText(FullName);
                     }
                 }
             }
-
-
             @Override
             public void onFailure(@NonNull Call<User> call, @NonNull Throwable t) {
                 fullname.setText(t.getMessage());
@@ -226,18 +145,10 @@ public class HomePage extends AppCompatActivity  {
         });
     }
 
-    public boolean isOnline() {
-        ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
-        NetworkInfo netInfo = cm.getActiveNetworkInfo();
-        return netInfo != null && netInfo.isConnectedOrConnecting();
-    }
-
-
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater = getMenuInflater();
          inflater.inflate(R.menu.bottom_navigation_menu, menu);
-        //getMenuInflater().inflate(R.menu.toolbar_menu, menu);
         return false;
     }
 
@@ -247,79 +158,15 @@ public class HomePage extends AppCompatActivity  {
         }
         else if(!isLocationEnabled(HomePage.this)){
             buildAlertMessageNoGps();
-        }else{
+        }
+        else{
             Intent intent = new Intent(this, CameraResult.class);
             this.startActivity(intent);
             customType(HomePage.this,"fadein-to-fadeout");
         }
     }
 
-/*
 
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-
-        switch (item.getItemId()) {
-            case R.id.list:
-                Log.d("qanli", "Done");
-
-                return true;
-            case R.id.history:
-
-
-
-                return true;
-
-            default:
-                return super.onOptionsItemSelected(item);
-        }
-    }*/
-
-/*
-    private void setupViewPager(ViewPager viewPager) {
-        ViewPagerAdapter adapter = new ViewPagerAdapter(getSupportFragmentManager());
-        adapter.addFragment(new Tab1(), "Keçmiş");
-        adapter.addFragment(new Tab2(), "Merkez");
-        adapter.addFragment(new Tab3(), "List");
-        viewPager.setAdapter(adapter);
-    }*/
-
-
-/*
-
-    class ViewPagerAdapter extends FragmentPagerAdapter {
-        private final List<Fragment> mFragmentList = new ArrayList<>();
-        private final List<String> mFragmentTitleList = new ArrayList<>();
-
-
-        ViewPagerAdapter(FragmentManager manager) {
-            super(manager);
-        }
-
-
-        @NonNull
-        @Override
-        public Fragment getItem(int position) {
-            return mFragmentList.get(position);
-        }
-
-        @Override
-        public int getCount() {
-            return mFragmentList.size();
-        }
-
-        void addFragment(Fragment fragment, String title) {
-
-            mFragmentList.add(fragment);
-            mFragmentTitleList.add(title);
-        }
-
-        @Override
-        public CharSequence getPageTitle(int position) {
-            return mFragmentTitleList.get(position);
-        }
-    }
-*/
     private void startLocationUpdates() {
         try {
 
@@ -329,13 +176,13 @@ public class HomePage extends AppCompatActivity  {
                 if (ActivityCompat.shouldShowRequestPermissionRationale(HomePage.this,
                         Manifest.permission.ACCESS_FINE_LOCATION)) {
 
-
                     ActivityCompat.requestPermissions(HomePage.this,
                             new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
                             0);
-
                 }
-            }else{
+            }
+            else
+                {
                 isLocGranted = true;
                 LocationRequest locationRequest = new LocationRequest();
                 locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
@@ -363,7 +210,7 @@ public class HomePage extends AppCompatActivity  {
             }
 
         }catch (Exception e){
-            Toast.makeText(HomePage.this, "GPS`də Xəta \n Zəhmət Olmasa Tətbiqi Yenidən Açın" , Toast.LENGTH_SHORT).show();
+            Toast.makeText(HomePage.this, "GPS`də Xəta \n Zəhmət Olmasa Tətbiqi Yenidən Başladın" , Toast.LENGTH_SHORT).show();
 
         }
     }
@@ -462,6 +309,31 @@ public class HomePage extends AppCompatActivity  {
         view.setSelectedItemId(R.id.main_menu);
     }
 
+
+    private void FindAllWidgets(){
+        view = findViewById(R.id.bottom_navigation);
+        view.setSelectedItemId(R.id.main_menu);
+        fullname = findViewById(R.id.fullname);
+        amount = findViewById(R.id.amount);
+        profileImage = findViewById(R.id.profilimage);
+        bar = findViewById(R.id.progressBar3);
+        backImage = findViewById(R.id.BackImage);
+        mTopToolbar = findViewById(R.id.mToolbar);
+    }
+
+    private void ImageProcess(String imageUrl){
+        Glide.with(HomePage.this)
+                .load(BuildConfig.BASE_URL + "images/"+imageUrl)
+                .fitCenter()
+                .diskCacheStrategy(DiskCacheStrategy.ALL)
+                .into(profileImage);
+
+        Glide.with(HomePage.this)
+                .load(BuildConfig.BASE_URL + "images/"+imageUrl)
+                .transform(new BlurTransformation(getApplicationContext()))
+                .diskCacheStrategy(DiskCacheStrategy.ALL)
+                .into(backImage);
+    }
 
 }
 

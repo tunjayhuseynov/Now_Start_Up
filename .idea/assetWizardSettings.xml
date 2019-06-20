@@ -29,6 +29,17 @@
                                           </PersistentState>
                                         </value>
                                       </entry>
+                                      <entry key="clipartAsset">
+                                        <value>
+                                          <PersistentState>
+                                            <option name="values">
+                                              <map>
+                                                <entry key="url" value="jar:file:/Applications/Android%20Studio.app/Contents/plugins/android/lib/android.jar!/images/material_design_icons/navigation/ic_arrow_back_black_24dp.xml" />
+                                              </map>
+                                            </option>
+                                          </PersistentState>
+                                        </value>
+                                      </entry>
                                       <entry key="image">
                                         <value>
                                           <PersistentState>
@@ -41,13 +52,23 @@
                                           </PersistentState>
                                         </value>
                                       </entry>
+                                      <entry key="text">
+                                        <value>
+                                          <PersistentState>
+                                            <option name="values">
+                                              <map>
+                                                <entry key="color" value="000000" />
+                                              </map>
+                                            </option>
+                                          </PersistentState>
+                                        </value>
+                                      </entry>
                                     </map>
                                   </option>
                                   <option name="values">
                                     <map>
-                                      <entry key="assetType" value="IMAGE" />
-                                      <entry key="imageAsset" value="C:\Users\tunca\Documents\StartUp\app\src\main\res\drawable\companylist.png" />
-                                      <entry key="outputName" value="scanicons" />
+                                      <entry key="imageAsset" value="$APPLICATION_HOME_DIR$/bin/C:\Users\tunca\Documents\StartUp\app\src\main\res\drawable\companylist.png" />
+                                      <entry key="outputName" value="back_icon" />
                                     </map>
                                   </option>
                                 </PersistentState>
@@ -86,7 +107,7 @@
                                     <map>
                                       <entry key="backgroundAssetType" value="COLOR" />
                                       <entry key="backgroundLayerName" value="camera_background" />
-                                      <entry key="foregroundImage" value="C:\Users\tunca\Documents\StartUp\app\src\main\res\camera.png" />
+                                      <entry key="foregroundImage" value="$APPLICATION_HOME_DIR$/bin/C:\Users\tunca\Documents\StartUp\app\src\main\res\camera.png" />
                                       <entry key="foregroundLayerName" value="camera_foreground" />
                                       <entry key="outputName" value="cameraicon" />
                                     </map>

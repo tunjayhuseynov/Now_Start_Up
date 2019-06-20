@@ -1,31 +1,26 @@
 package com.now.startupteamnow;
 
+import android.Manifest;
+import android.content.Context;
+import android.content.DialogInterface;
+import android.content.Intent;
+import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
+import android.net.Uri;
+import android.os.Bundle;
+import android.widget.Toast;
+
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
-import android.Manifest;
-import android.content.DialogInterface;
-import android.content.Intent;
-import android.content.SharedPreferences;
-import android.content.pm.PackageManager;
-import android.net.Uri;
-import android.os.Bundle;
-
-import com.google.firebase.messaging.RemoteMessage;
-
-import java.security.Permission;
-import java.sql.Array;
-import java.util.List;
-import java.util.Map;
-
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
-import retrofit2.Retrofit;
-import retrofit2.converter.gson.GsonConverterFactory;
 
 import static maes.tech.intentanim.CustomIntent.customType;
 
@@ -38,6 +33,7 @@ public class Opening extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_opening);
+        if(!isOnline()){ Toast.makeText(Opening.this, "Internet Yoxdur", Toast.LENGTH_LONG).show();  return;}
 
         for (String permission:Permissions) {
             if (ContextCompat.checkSelfPermission(Opening.this, permission)!= PackageManager.PERMISSION_GRANTED) {
@@ -48,9 +44,15 @@ public class Opening extends AppCompatActivity {
                 }
         }
 
-                CheckUpdate();
+        CheckUpdate();
 
 
+    }
+
+    public boolean isOnline() {
+        ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo netInfo = cm.getActiveNetworkInfo();
+        return netInfo != null && netInfo.isConnectedOrConnecting();
     }
 
 
@@ -79,10 +81,8 @@ public class Opening extends AppCompatActivity {
         final AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setMessage("Bütün İcazələr Təsdiq Edilməlidir.\nZəhmət Olmasa, İcazələri Təsdiq Edəsiniz")
                 .setCancelable(false)
-                .setNegativeButton("Yenidən", new DialogInterface.OnClickListener() {
+                .setNegativeButton("İcazə Təklifləri", new DialogInterface.OnClickListener() {
                     public void onClick(final DialogInterface dialog, final int id) {
-                        //finish();
-                        //ActivityCompat.requestPermissions(Opening.this, Permissions,0);
                         Intent same = new Intent(Opening.this, Opening.class);
                         startActivity(same);
                     }
@@ -119,37 +119,32 @@ public class Opening extends AppCompatActivity {
 
     private void CheckUpdate(){
 
-        String authhead = "Basic Tm93dGVhbTo1NTkxOTgwTm93";
+        JsonApi jsonApi = Request_And_API_Key.GetRetrofit().create(JsonApi.class);
 
-        Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl(BuildConfig.BASE_URL)
-                .addConverterFactory(GsonConverterFactory.create())
-                .build();
-
-        JsonApi jsonApi = retrofit.create(JsonApi.class);
-
-
-
-        final Call<Boolean> call = jsonApi.CheckUpdate(authhead);
+        final Call<Boolean> call = jsonApi.CheckUpdate(Request_And_API_Key.Api_Key);
 
         call.enqueue(new Callback<Boolean>() {
             @Override
-            public void onResponse(Call<Boolean> call, Response<Boolean> response) {
-                if(!response.isSuccessful()){}
+            public void onResponse(@NonNull Call<Boolean> call, @NonNull Response<Boolean> response) {
+                if(!response.isSuccessful()){
+                    Toast.makeText(Opening.this, "Server İlə Əlaqədə Xəta Aşkarlandı", Toast.LENGTH_LONG).show();
+                }
 
                 if(response.body() != null){
                     Boolean bool = response.body();
                     if(bool){
                         UpdateAlert();
-                    }else{
+                    }
+                    else{
                         CheckUser();
                     }
                 }
             }
 
             @Override
-            public void onFailure(Call<Boolean> call, Throwable t) {
+            public void onFailure(@NonNull Call<Boolean> call, @NonNull Throwable t) {
 
+                Toast.makeText(Opening.this, "Server İlə Əlaqədə Xəta Aşkarlandı", Toast.LENGTH_LONG).show();
             }
         });
     }

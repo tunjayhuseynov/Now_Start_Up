@@ -1,14 +1,20 @@
 package com.now.startupteamnow;
 
 import android.annotation.SuppressLint;
+import android.app.ActionBar;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.view.MenuItem;
+import android.view.View;
+import android.widget.Toolbar;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+
+import com.google.android.material.appbar.AppBarLayout;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -32,12 +38,19 @@ public class History extends AppCompatActivity {
         setContentView(R.layout.activity_history);
 
 
+
+        AppBarLayout appBarLayout = findViewById(R.id.appBarLayout);
+
+
+
         mRecyclerView = findViewById(R.id.HistoryRecycler);
         mRecyclerView.setHasFixedSize(true);
 
         GetHistory();
 
     }
+
+
 
 
     private void GetHistory(){
@@ -100,5 +113,11 @@ public class History extends AppCompatActivity {
         customType(History.this,"left-to-right");
 
         super.onBackPressed();
+    }
+
+    public void Back(View view){
+        Intent intent = new Intent(History.this, HomePage.class);
+        startActivity(intent);
+        customType(History.this,"left-to-right");
     }
 }
