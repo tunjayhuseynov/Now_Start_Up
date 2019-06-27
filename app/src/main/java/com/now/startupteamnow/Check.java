@@ -12,8 +12,6 @@ import androidx.appcompat.app.AppCompatActivity;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
-import retrofit2.Retrofit;
-import retrofit2.converter.gson.GsonConverterFactory;
 
 public class Check extends AppCompatActivity {
 
@@ -26,29 +24,16 @@ public class Check extends AppCompatActivity {
         String number = intent.getStringExtra("number");
         String pass = intent.getStringExtra("pass");
 
-        Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl(BuildConfig.BASE_URL)
-                .addConverterFactory(GsonConverterFactory.create())
-                .build();
 
-        JsonApi jsonApi = retrofit.create(JsonApi.class);
+        JsonApi jsonApi = Request_And_API_Key.GetRetrofit().create(JsonApi.class);
 
-
-        //UserInput userInput = new UserInput(number, pass);
-
-        String username = "Nowteam";
-        String password = "5591980Now";
-        String base = username + ":" + password;
-        //String authhead = "Basic " + Base64.encodeToString(base.getBytes(), Base64.NO_WRAP);
-        String authhead = "Basic Tm93dGVhbTo1NTkxOTgwTm93";
-        final Call<CheckResponse> call = jsonApi.CheckUser(authhead,number, pass);
+        final Call<CheckResponse> call = jsonApi.CheckUser(Request_And_API_Key.Api_Key,number, pass);
 
         call.enqueue(new Callback<CheckResponse>() {
             @Override
             public void onResponse(@NonNull Call<CheckResponse> call, @NonNull Response<CheckResponse> response) {
                 if(!response.isSuccessful()){
-                    Log.d("Qanli", response.raw().toString() + " " + response.headers().toString());
-                    Toast.makeText(Check.this, response.raw().toString()+"" + response.code(), Toast.LENGTH_LONG).show();
+                    Toast.makeText(Check.this, "Xəta", Toast.LENGTH_LONG).show();
                     Intent intent1 = new Intent(Check.this, LogIn.class);
                     startActivity(intent1);
                 }
@@ -57,7 +42,7 @@ public class Check extends AppCompatActivity {
                     CheckResponse checkResponse = response.body();
 
                     if(!checkResponse.isFound()){
-                        Toast.makeText(Check.this, "Daxil Etdiyiniz Melumatlar Databazamizda Mevcut Deyil", Toast.LENGTH_LONG).show();
+                        Toast.makeText(Check.this, "Daxil Etdiyiniz Mılumatlar Databazamızda Mövcud Deyil", Toast.LENGTH_LONG).show();
                         Intent intent1 = new Intent(Check.this, LogIn.class);
                         startActivity(intent1);
                     }
@@ -83,9 +68,8 @@ public class Check extends AppCompatActivity {
             }
 
             @Override
-            public void onFailure(Call<CheckResponse> call, Throwable t) {
-                Log.d("Qanli Error", t.toString());
-                Toast.makeText(Check.this, t.toString(), Toast.LENGTH_LONG).show();
+            public void onFailure(@NonNull Call<CheckResponse> call, @NonNull Throwable t) {
+                Toast.makeText(Check.this, "Xəta", Toast.LENGTH_LONG).show();
                 Intent intent1 = new Intent(Check.this, LogIn.class);
                 startActivity(intent1);
             }

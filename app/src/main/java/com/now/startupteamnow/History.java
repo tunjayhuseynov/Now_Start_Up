@@ -1,20 +1,14 @@
 package com.now.startupteamnow;
 
 import android.annotation.SuppressLint;
-import android.app.ActionBar;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.view.MenuItem;
 import android.view.View;
-import android.widget.Toolbar;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-
-import com.google.android.material.appbar.AppBarLayout;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -23,8 +17,6 @@ import java.util.ArrayList;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
-import retrofit2.Retrofit;
-import retrofit2.converter.gson.GsonConverterFactory;
 
 import static maes.tech.intentanim.CustomIntent.customType;
 
@@ -38,11 +30,6 @@ public class History extends AppCompatActivity {
         setContentView(R.layout.activity_history);
 
 
-
-        AppBarLayout appBarLayout = findViewById(R.id.appBarLayout);
-
-
-
         mRecyclerView = findViewById(R.id.HistoryRecycler);
         mRecyclerView.setHasFixedSize(true);
 
@@ -50,45 +37,25 @@ public class History extends AppCompatActivity {
 
     }
 
-
-
-
     private void GetHistory(){
-        SharedPreferences sp = this.getSharedPreferences("Login", MODE_PRIVATE);
-        //String token = sp.getString("token", null);
-        int userid = sp.getInt("id", 0);
+        JsonApi jsonApi = Request_And_API_Key.GetRetrofit().create(JsonApi.class);
 
-
-        String authhead = "Basic Tm93dGVhbTo1NTkxOTgwTm93";
-
-        Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl(BuildConfig.BASE_URL)
-                .addConverterFactory(GsonConverterFactory.create())
-                .build();
-
-        JsonApi jsonApi = retrofit.create(JsonApi.class);
-
-
-
-        final Call<ArrayList<UserHistoryJson>> user = jsonApi.getHistory(authhead,userid);
+        final Call<ArrayList<UserHistoryJson>> user = jsonApi.getHistory(Request_And_API_Key.Api_Key,Request_And_API_Key.GetId(History.this));
 
         user.enqueue(new Callback<ArrayList<UserHistoryJson>>() {
             @Override
             public void onResponse(@NonNull Call<ArrayList<UserHistoryJson>> call, @NonNull Response<ArrayList<UserHistoryJson>> response) {
-                if(!response.isSuccessful()) {exampleList.add(new AnHistoryItem("Yenidən Yoxlayın", "",""));}
+                if(!response.isSuccessful()) {
+                    exampleList.add(new AnHistoryItem("", "Yenidən Yoxlayın",""));
+                }
 
                 if(response.body() != null){
                     ArrayList<UserHistoryJson> historyJsons = response.body();
 
                     @SuppressLint("SimpleDateFormat") DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
                     for (UserHistoryJson item: historyJsons) {
-
                         exampleList.add(new AnHistoryItem(item.getCompanyName(), dateFormat.format(item.getCapturedAt()), "+"+ item.getBonus()));
-
-
                     }
-
-
                 }
 
                 RecyclerView.LayoutManager mLayoutManager = new LinearLayoutManager(getApplicationContext());
@@ -100,6 +67,7 @@ public class History extends AppCompatActivity {
 
             @Override
             public void onFailure(@NonNull Call<ArrayList<UserHistoryJson>> call, @NonNull Throwable t) {
+                exampleList.add(new AnHistoryItem("", "Yenidən Yoxlayın",""));
 
             }
         });

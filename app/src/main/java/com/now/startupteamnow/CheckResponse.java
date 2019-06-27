@@ -26,7 +26,7 @@ public class CheckResponse {
         this.id = id;
     }
 
-    public String getToken() {
+    String getToken() {
         return token;
     }
 
@@ -34,7 +34,7 @@ public class CheckResponse {
         this.token = token;
     }
 
-    public boolean isFound() {
+    boolean isFound() {
         return isFound;
     }
 
@@ -42,7 +42,7 @@ public class CheckResponse {
         isFound = found;
     }
 
-    public boolean isPassCorrect() {
+    boolean isPassCorrect() {
         return isPassCorrect;
     }
 

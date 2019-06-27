@@ -26,6 +26,7 @@ class CreateUser {
     private String Email;
 
     Map<String, String> getMap() {
+
         return map;
     }
 

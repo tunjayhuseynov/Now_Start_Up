@@ -1,27 +1,21 @@
 package com.now.startupteamnow;
 
+import android.content.Intent;
+import android.os.Bundle;
+import android.view.View;
+import android.widget.Toast;
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-
-import android.annotation.SuppressLint;
-import android.content.Intent;
-import android.content.SharedPreferences;
-import android.os.Bundle;
-
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
-import retrofit2.Retrofit;
-import retrofit2.converter.gson.GsonConverterFactory;
 
 import static maes.tech.intentanim.CustomIntent.customType;
 
-public class List<U> extends AppCompatActivity {
+public class List extends AppCompatActivity {
 
     ArrayList<AnItem> exampleList = new ArrayList<>();
     RecyclerView mRecyclerView;
@@ -35,45 +29,27 @@ public class List<U> extends AppCompatActivity {
         mRecyclerView.setHasFixedSize(true);
 
         GetList();
-
     }
 
     private void GetList(){
-        SharedPreferences sp = this.getSharedPreferences("Login", MODE_PRIVATE);
-        //String token = sp.getString("token", null);
-        int userid = sp.getInt("id", 0);
+        JsonApi jsonApi = Request_And_API_Key.GetRetrofit().create(JsonApi.class);
 
-
-        String authhead = "Basic Tm93dGVhbTo1NTkxOTgwTm93";
-
-        Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl(BuildConfig.BASE_URL)
-                .addConverterFactory(GsonConverterFactory.create())
-                .build();
-
-        JsonApi jsonApi = retrofit.create(JsonApi.class);
-
-
-
-        final Call<ArrayList<CompanyInformation>> user = jsonApi.getCompanyList(authhead);
+        final Call<ArrayList<CompanyInformation>> user = jsonApi.getCompanyList(Request_And_API_Key.Api_Key);
 
         user.enqueue(new Callback<ArrayList<CompanyInformation>>() {
             @Override
-            public void onResponse(Call<ArrayList<CompanyInformation>> call, Response<ArrayList<CompanyInformation>> response) {
-                if(!response.isSuccessful()) {exampleList.add(new AnItem("Yenidən Yoxlayın", "",""));}
+            public void onResponse(@NonNull Call<ArrayList<CompanyInformation>> call, @NonNull Response<ArrayList<CompanyInformation>> response) {
+                if(!response.isSuccessful()) {
+                    exampleList.add(new AnItem("", "Yenidən Yoxlayın",""));
+                }
 
                 if(response.body() != null){
                     ArrayList<CompanyInformation> historyJsons = response.body();
 
-                    @SuppressLint("SimpleDateFormat") DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
                     for (CompanyInformation item: historyJsons) {
-
                         exampleList.add(new AnItem(item.getImageSrc(),item.getName(), item.getDescription()));
 
-
                     }
-
-
                 }
 
                 RecyclerView.LayoutManager mLayoutManager = new LinearLayoutManager(getApplicationContext());
@@ -84,8 +60,8 @@ public class List<U> extends AppCompatActivity {
             }
 
             @Override
-            public void onFailure(Call<ArrayList<CompanyInformation>> call, Throwable t) {
-
+            public void onFailure(@NonNull Call<ArrayList<CompanyInformation>> call, @NonNull Throwable t) {
+                Toast.makeText(List.this, "Yenidən Yoxlayın", Toast.LENGTH_LONG).show();
             }
         });
     }
@@ -97,5 +73,11 @@ public class List<U> extends AppCompatActivity {
         customType(List.this,"right-to-left");
 
         super.onBackPressed();
+    }
+
+    public void Back(View view){
+        Intent intent = new Intent(List.this, HomePage.class);
+        startActivity(intent);
+        customType(List.this,"left-to-right");
     }
 }

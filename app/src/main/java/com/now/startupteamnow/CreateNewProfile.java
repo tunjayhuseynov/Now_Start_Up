@@ -1,7 +1,6 @@
 package com.now.startupteamnow;
 
 import android.app.DatePickerDialog;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
@@ -10,7 +9,6 @@ import android.graphics.drawable.ColorDrawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
-import android.provider.Settings;
 import android.util.Log;
 import android.view.View;
 import android.widget.ArrayAdapter;
@@ -23,7 +21,6 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.loader.content.CursorLoader;
 
@@ -39,17 +36,13 @@ import okhttp3.RequestBody;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
-import retrofit2.Retrofit;
-import retrofit2.converter.gson.GsonConverterFactory;
 
 public class CreateNewProfile extends AppCompatActivity {
-
     ImageView pc ;
     private Uri image;
     private String imageName;
     private String nameUser;
     private String surnameUser;
-
 
     private DatePickerDialog.OnDateSetListener dateSetListener;
     @Override
@@ -72,14 +65,11 @@ public class CreateNewProfile extends AppCompatActivity {
             }
         };
 
-
         spinner.setAdapter(adapter);
         spinner.setSelection(2);
 
         //Date Picker Made
-
         final EditText adgunu = findViewById(R.id.adgunu);
-
 
         adgunu.setShowSoftInputOnFocus(false);
 
@@ -119,17 +109,13 @@ public class CreateNewProfile extends AppCompatActivity {
         dateSetListener = new DatePickerDialog.OnDateSetListener() {
             @Override
             public void onDateSet(DatePicker view, int year, int month, int dayOfMonth) {
-
                 month += 1;
-
                 String result = dayOfMonth + "/" + month + "/" + year;
                 adgunu.setText(result);
             }
         };
 
-
         //Photo Upload
-
         Button btnPhoto = findViewById(R.id.btnUpload);
         btnPhoto.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -139,12 +125,9 @@ public class CreateNewProfile extends AppCompatActivity {
         });
 
         // Name
-
         final EditText name = findViewById(R.id.EditName);
 
-
         // Surname
-
         final EditText surname = findViewById(R.id.EditSurname);
 
         //Get Info From Prev Intent
@@ -165,13 +148,7 @@ public class CreateNewProfile extends AppCompatActivity {
                     nameUser = name.getText().toString();
                     surnameUser = surname.getText().toString();
 
-                    Retrofit retrofit = new Retrofit.Builder()
-                            .baseUrl(BuildConfig.BASE_URL)
-                            .addConverterFactory(GsonConverterFactory.create())
-                            .build();
-
-                    JsonApi jsonApi = retrofit.create(JsonApi.class);
-                    String authhead = "Basic Tm93dGVhbTo1NTkxOTgwTm93";
+                    JsonApi jsonApi = Request_And_API_Key.GetRetrofit().create(JsonApi.class);
 
                     CreateUser user = new CreateUser();
                     String[] fixedAdgunu = adgunu.getText().toString().split("/");
@@ -185,30 +162,22 @@ public class CreateNewProfile extends AppCompatActivity {
                     user.setPhoneNumber(telefon);
                     user.setSurname(surnameUser);
 
-                    Log.d("Qanli User", user.getDate() + " / " + user.getEmail() + " / " + user.getImgName() + " / " + user.getName() + " / " + user.getPassword() + " / " + user.getPhoneNumber() + " / " + user.getSurname());
-                    Log.d("Qanli ad", imageName);
-
-
                     File imageFile = new File(getPath(image));
-                    Log.d("Qanli Image", getPath(image));
                     // Create a request body with file and image media type
                     RequestBody fileReqBody = RequestBody.create(MediaType.parse(Objects.requireNonNull(getContentResolver().getType(image))), imageFile);
                     // Create MultipartBody.Part using file request-body,file name and part name
                     MultipartBody.Part part = MultipartBody.Part.createFormData("file", imageFile.getName(), fileReqBody);
 
-                    final Call<CheckResponse> call = jsonApi.postNewUser(authhead, part, user.getMap());
-                    Log.d("Qanli map", user.getMap().toString());
+                    final Call<CheckResponse> call = jsonApi.postNewUser(Request_And_API_Key.Api_Key, part, user.getMap());
                     call.enqueue(new Callback<CheckResponse>() {
                         @Override
                         public void onResponse(@NonNull Call<CheckResponse> call, @NonNull Response<CheckResponse> response) {
                             if(!response.isSuccessful()){
                                 Toast.makeText(CreateNewProfile.this, "Serverdə Xəta Var", Toast.LENGTH_LONG).show();
-                                Log.d("Qanli ", response.message() + response.code());
                             }
 
                             if(response.body() != null){
                                 CheckResponse data = response.body();
-                                Log.d("Qanli", data.getId() + " " + data.getToken());
                                 SharedPreferences.Editor sp = getSharedPreferences("Login", MODE_PRIVATE).edit();
                                 sp.putInt("id", data.getId());
                                 sp.putString("token", data.getToken());
@@ -217,18 +186,14 @@ public class CreateNewProfile extends AppCompatActivity {
                                 Intent intent = new Intent(CreateNewProfile.this, HomePage.class);
                                 startActivity(intent);
                             }
-
                         }
-
                         @Override
                         public void onFailure(@NonNull Call<CheckResponse> call, @NonNull Throwable t) {
-                            Log.d("Qanli Error", t.toString());
+                            Toast.makeText(CreateNewProfile.this, "Serverdə Xəta Var", Toast.LENGTH_LONG).show();
                         }
                     });
-
-
-
-                }else{
+                }
+                else{
                     Toast.makeText(CreateNewProfile.this, "Lazımlı Yerləri Doldurun", Toast.LENGTH_LONG).show();
                 }
             }catch (Exception e){
@@ -239,8 +204,6 @@ public class CreateNewProfile extends AppCompatActivity {
         });
 
     }
-
-
 
     private void OpenGallery(){
         Intent intent =  new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.INTERNAL_CONTENT_URI);
@@ -260,7 +223,6 @@ public class CreateNewProfile extends AppCompatActivity {
                     Picasso.get().load(file).into(pc);
                 }
             }
-
         }
     }
 
@@ -273,7 +235,5 @@ public class CreateNewProfile extends AppCompatActivity {
         cursor.moveToFirst();
         return cursor.getString(column_index);
     }
-
-
 }
 

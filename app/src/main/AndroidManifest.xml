@@ -18,8 +18,6 @@
         android:smallScreens="true"
         android:xlargeScreens="true" />
 
-
-
     <application
         android:allowBackup="false"
         android:hardwareAccelerated="true"
@@ -30,7 +28,7 @@
         android:theme="@style/AppTheme"
         android:usesCleartextTraffic="true"
         tools:ignore="GoogleAppIndexingWarning">
-        <activity android:name=".History"></activity>
+        <activity android:name=".History" />
         <activity android:name=".List" />
         <activity
             android:name=".CreateNewProfile"
@@ -55,8 +53,6 @@
         <meta-data
             android:name="preloaded_fonts"
             android:resource="@array/preloaded_fonts" />
-
-
 
 
     </application>

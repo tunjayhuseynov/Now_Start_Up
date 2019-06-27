@@ -6,7 +6,7 @@ public class CompanyInformation {
     private String Name;
     private String Description;
 
-    public String getImageSrc() {
+    String getImageSrc() {
         return imageSrc;
     }
 
@@ -22,7 +22,7 @@ public class CompanyInformation {
         Name = name;
     }
 
-    public String getDescription() {
+    String getDescription() {
         return Description;
     }
 

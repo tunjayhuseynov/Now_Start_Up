@@ -7,6 +7,8 @@ import android.renderscript.Element;
 import android.renderscript.RenderScript;
 import android.renderscript.ScriptIntrinsicBlur;
 
+import androidx.annotation.NonNull;
+
 import com.bumptech.glide.load.engine.bitmap_recycle.BitmapPool;
 import com.bumptech.glide.load.resource.bitmap.BitmapTransformation;
 
@@ -16,14 +18,14 @@ public class BlurTransformation extends BitmapTransformation {
 
     private RenderScript rs;
 
-    public BlurTransformation(Context context) {
+    BlurTransformation(Context context) {
         super();
 
         rs = RenderScript.create(context);
     }
 
     @Override
-    protected Bitmap transform(BitmapPool pool, Bitmap toTransform, int outWidth, int outHeight) {
+    protected Bitmap transform(@NonNull BitmapPool pool, @NonNull Bitmap toTransform, int outWidth, int outHeight) {
         Bitmap blurredBitmap = toTransform.copy(Bitmap.Config.ARGB_8888, true);
 
         // Allocate memory for Renderscript to work with
@@ -48,7 +50,7 @@ public class BlurTransformation extends BitmapTransformation {
     }
 
     @Override
-    public void updateDiskCacheKey(MessageDigest messageDigest) {
+    public void updateDiskCacheKey(@NonNull MessageDigest messageDigest) {
         messageDigest.update("blur transformation".getBytes());
     }
 }

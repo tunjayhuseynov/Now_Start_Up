@@ -27,8 +27,6 @@ public class Registration extends AppCompatActivity {
     private boolean telready = false;
     private boolean mailready =false;
     private boolean passraedy =false;
-    private String username = "Nowteam";
-    private String password = "5591980Now";
     private EditText tel;
     private EditText mail;
     private EditText pass;
@@ -46,14 +44,9 @@ public class Registration extends AppCompatActivity {
 
         ireli.setEnabled(false);
 
-
         tel.addTextChangedListener(textWatcher);
         mail.addTextChangedListener(textWatcher);
         pass.addTextChangedListener(textWatcher);
-
-
-
-
 
 
         ireli.setOnClickListener(new View.OnClickListener() {
@@ -62,19 +55,9 @@ public class Registration extends AppCompatActivity {
                 ireli.setVisibility(View.INVISIBLE);
                 bar.setVisibility(View.VISIBLE);
 
-                Retrofit retrofit = new Retrofit.Builder()
-                        .baseUrl(BuildConfig.BASE_URL)
-                        .addConverterFactory(GsonConverterFactory.create())
-                        .build();
+                JsonApi jsonApi = Request_And_API_Key.GetRetrofit().create(JsonApi.class);
 
-                JsonApi jsonApi = retrofit.create(JsonApi.class);
-
-
-                //UserInput userInput = new UserInput(tel.getText().toString(), pass.getText().toString());
-
-                String base = username + ":" + password;
-                String authhead = "Basic " + Base64.encodeToString(base.getBytes(), Base64.NO_WRAP);
-                final Call<CheckResponse> call = jsonApi.CheckUser( authhead, tel.getText().toString(), pass.getText().toString());
+                final Call<CheckResponse> call = jsonApi.CheckUser( Request_And_API_Key.Api_Key, tel.getText().toString(), pass.getText().toString());
 
                 call.enqueue(new Callback<CheckResponse>() {
                     @Override
@@ -90,7 +73,6 @@ public class Registration extends AppCompatActivity {
                                 next.putExtra("telefon", tel.getText().toString());
                                 next.putExtra("email", mail.getText().toString());
                                 next.putExtra("password", pass.getText().toString());
-                                //Toast.makeText(Registration.this,"Tebrikler", Toast.LENGTH_LONG).show();
                                 startActivity(next);
                             }else{
                                 Toast.makeText(Registration.this, "Belə Bir Nömrə Artıq Mövcutdur", Toast
@@ -99,13 +81,11 @@ public class Registration extends AppCompatActivity {
                             ireli.setVisibility(View.VISIBLE);
                             bar.setVisibility(View.INVISIBLE);
                         }
-
-
                     }
 
                     @Override
                     public void onFailure(@NonNull Call<CheckResponse> call, @NonNull Throwable t) {
-
+                        Toast.makeText(Registration.this, "Internetdə Xəta Var", Toast.LENGTH_LONG).show();
                     }
                 });
 

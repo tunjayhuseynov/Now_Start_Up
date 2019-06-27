@@ -5,23 +5,20 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
-
+import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
-
 import com.bumptech.glide.Glide;
-import com.bumptech.glide.load.engine.DiskCacheStrategy;
-
 import java.util.ArrayList;
 
 public class ListAdapter extends RecyclerView.Adapter<ListAdapter.ExampleViewHolder> {
     private ArrayList<AnItem> mExampleList;
 
-    public static class ExampleViewHolder extends RecyclerView.ViewHolder {
-        public ImageView mImageView;
-        public TextView mTextView1;
-        public TextView mTextView2;
+    static class ExampleViewHolder extends RecyclerView.ViewHolder {
+        ImageView mImageView;
+        TextView mTextView1;
+        TextView mTextView2;
 
-        public ExampleViewHolder(View itemView) {
+        ExampleViewHolder(View itemView) {
             super(itemView);
             mImageView = itemView.findViewById(R.id.itemimage);
             mTextView1 = itemView.findViewById(R.id.itemtext);
@@ -29,28 +26,25 @@ public class ListAdapter extends RecyclerView.Adapter<ListAdapter.ExampleViewHol
         }
     }
 
-    public ListAdapter(ArrayList<AnItem> exampleList) {
+    ListAdapter(ArrayList<AnItem> exampleList) {
         mExampleList = exampleList;
     }
 
     @Override
-    public ExampleViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+    @NonNull
+    public ExampleViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View v = LayoutInflater.from(parent.getContext()).inflate(R.layout.itemlist , parent, false);
-        ExampleViewHolder evh = new ExampleViewHolder(v);
-        return evh;
+        return new ExampleViewHolder(v);
     }
 
     @Override
-    public void onBindViewHolder(ExampleViewHolder holder, int position) {
+    public void onBindViewHolder(@NonNull ExampleViewHolder holder, int position) {
         AnItem currentItem = mExampleList.get(position);
-
-        //holder.mImageView.setImageResource(currentItem.getImageResource());
 
         Glide.with(holder.mImageView.getContext())
                 .load(BuildConfig.BASE_URL + "images/companies/"+ currentItem.getImageResource())
                 .into(holder.mImageView);
-
-
+        
         holder.mTextView1.setText(currentItem.getText1());
         holder.mTextView2.setText(currentItem.getText2());
     }

@@ -16,19 +16,19 @@ public class QRcode {
         return Id;
     }
 
-    public String getCode() {
+    String getCode() {
         return Code;
     }
 
-    public int getBonus() {
+    int getBonus() {
         return Bonus;
     }
 
-    public double getxCoordination() {
+    double getxCoordination() {
         return xCoordination;
     }
 
-    public double getyCoordination() {
+    double getyCoordination() {
         return yCoordination;
     }
 
@@ -46,5 +46,41 @@ public class QRcode {
 
     public String getImage() {
         return Image;
+    }
+
+    public void setCode(String code) {
+        Code = code;
+    }
+
+    public void setBonus(int bonus) {
+        Bonus = bonus;
+    }
+
+    public void setxCoordination(double xCoordination) {
+        this.xCoordination = xCoordination;
+    }
+
+    public void setyCoordination(double yCoordination) {
+        this.yCoordination = yCoordination;
+    }
+
+    public void setCompanyName(String companyName) {
+        CompanyName = companyName;
+    }
+
+    public void setDetails(String details) {
+        Details = details;
+    }
+
+    public void setBonusType(boolean bonusType) {
+        BonusType = bonusType;
+    }
+
+    public void setImage(String image) {
+        Image = image;
+    }
+
+    public void setId(int id) {
+        Id = id;
     }
 }

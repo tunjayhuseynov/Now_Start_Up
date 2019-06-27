@@ -18,7 +18,7 @@ public class User {
         return Name;
     }
 
-    public String getSurname() {
+    String getSurname() {
         return Surname;
     }
 
@@ -26,7 +26,7 @@ public class User {
         return Date;
     }
 
-    public String getImgPath() {
+    String getImgPath() {
         return ImgName;
     }
 
@@ -34,9 +34,9 @@ public class User {
         return IsMale;
     }
 
-    public int getBonus() {
+    int getBonus() {
         return Bonus;
     }
 
-    public String getToken(){ return Token;}
+    String getToken(){ return Token;}
 }

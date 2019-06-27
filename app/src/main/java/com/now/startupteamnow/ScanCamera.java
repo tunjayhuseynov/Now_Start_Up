@@ -6,6 +6,7 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.journeyapps.barcodescanner.BarcodeView;
@@ -30,9 +31,7 @@ public class ScanCamera extends AppCompatActivity implements DecoratedBarcodeVie
         barcodeScannerView = findViewById(R.id.zxing_barcode_scanner);
         barcodeScannerView.setTorchListener(this);
 
-
         switchFlashlightButton = findViewById(R.id.switch_flashlight);
-
 
         if (!hasFlash()) {
             switchFlashlightButton.setVisibility(View.GONE);
@@ -41,8 +40,6 @@ public class ScanCamera extends AppCompatActivity implements DecoratedBarcodeVie
         capture = new CaptureManager(this, barcodeScannerView);
         capture.initializeFromIntent(getIntent(), savedInstanceState);
         capture.decode();
-
-
 
     }
 
@@ -78,7 +75,7 @@ public class ScanCamera extends AppCompatActivity implements DecoratedBarcodeVie
     }
 
     @Override
-    protected void onSaveInstanceState(Bundle outState) {
+    protected void onSaveInstanceState(@NonNull Bundle outState) {
         super.onSaveInstanceState(outState);
         capture.onSaveInstanceState(outState);
     }

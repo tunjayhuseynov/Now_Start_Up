@@ -17,14 +17,11 @@ import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
-
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.app.ActivityCompat;
-import androidx.viewpager.widget.ViewPager;
-
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.google.android.gms.common.ConnectionResult;
@@ -35,7 +32,6 @@ import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
-import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import java.util.Objects;
 
@@ -44,7 +40,6 @@ import retrofit2.Callback;
 import retrofit2.Response;
 
 import static maes.tech.intentanim.CustomIntent.customType;
-
 
 public class HomePage extends AppCompatActivity  {
     private TextView fullname, amount;
@@ -79,6 +74,7 @@ public class HomePage extends AppCompatActivity  {
             fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
 
             startLocationUpdates();
+
             GetUserInfo();
 
             view.setOnNavigationItemSelectedListener(new BottomNavigationView.OnNavigationItemSelectedListener() {
@@ -89,16 +85,12 @@ public class HomePage extends AppCompatActivity  {
                             Intent intent = new Intent(HomePage.this, List.class);
                             startActivity(intent);
                             customType(HomePage.this,"left-to-right");
-
                             return true;
                         case R.id.history:
-
                             Intent intent2 = new Intent(HomePage.this, History.class);
                             startActivity(intent2);
                             customType(HomePage.this,"right-to-left");
-
                             return true;
-
                         default:
                             return true;
                     }
@@ -112,7 +104,6 @@ public class HomePage extends AppCompatActivity  {
 
     }
 
-
     private void GetUserInfo(){
         JsonApi jsonApi = Request_And_API_Key.GetRetrofit().create(JsonApi.class);
         final Call<User> user = jsonApi.getUserWithPost(Request_And_API_Key.Api_Key, Request_And_API_Key.GetId(this), Request_And_API_Key.GetToken(this));
@@ -124,7 +115,6 @@ public class HomePage extends AppCompatActivity  {
                     Toast.makeText(HomePage.this, "Server İlə Əlaqədə Xəta Aşkarlandı", Toast.LENGTH_LONG).show();
                     return;
                 }
-
                 bar.setVisibility(View.INVISIBLE); profileImage.setVisibility(View.VISIBLE);
 
                 if(response.body() != null){
@@ -140,7 +130,8 @@ public class HomePage extends AppCompatActivity  {
             }
             @Override
             public void onFailure(@NonNull Call<User> call, @NonNull Throwable t) {
-                fullname.setText(t.getMessage());
+                bar.setVisibility(View.INVISIBLE); profileImage.setVisibility(View.VISIBLE);
+                Toast.makeText(HomePage.this, "Server İlə Əlaqədə Xəta Aşkarlandı", Toast.LENGTH_LONG).show();
             }
         });
     }
@@ -166,10 +157,8 @@ public class HomePage extends AppCompatActivity  {
         }
     }
 
-
     private void startLocationUpdates() {
         try {
-
             if (ActivityCompat.checkSelfPermission(this,
                     Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
 
@@ -199,7 +188,7 @@ public class HomePage extends AppCompatActivity  {
                         for (Location location : locationResult.getLocations()) {
                             lat = String.valueOf(location.getLatitude());
                             lon = String.valueOf(location.getLongitude());
-                            //Toast.makeText(HomePage.this, lat + " Update " + lon, Toast.LENGTH_LONG).show();
+                            Log.d("Location: " , lat + " " + lon);
                         }
                     }
 
@@ -211,7 +200,6 @@ public class HomePage extends AppCompatActivity  {
 
         }catch (Exception e){
             Toast.makeText(HomePage.this, "GPS`də Xəta \n Zəhmət Olmasa Tətbiqi Yenidən Başladın" , Toast.LENGTH_SHORT).show();
-
         }
     }
 
@@ -231,7 +219,6 @@ public class HomePage extends AppCompatActivity  {
             } else {
                 finish();
             }
-
             return false;
         }
 
@@ -258,7 +245,6 @@ public class HomePage extends AppCompatActivity  {
     }
 
     protected void buildAlertMessageNoGps() {
-
         final AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setMessage("Zəhmət olmasa GPS xidmətini aktiv edəsiniz")
                 .setCancelable(false)

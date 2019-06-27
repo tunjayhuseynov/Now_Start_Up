@@ -18,7 +18,7 @@ public class UserHistoryJson {
         UserId = userId;
     }
 
-    public Date getCapturedAt() {
+    Date getCapturedAt() {
         return CapturedAt;
     }
 
@@ -26,7 +26,7 @@ public class UserHistoryJson {
         CapturedAt = capturedAt;
     }
 
-    public int getBonus() {
+    int getBonus() {
         return Bonus;
     }
 
@@ -34,7 +34,7 @@ public class UserHistoryJson {
         Bonus = bonus;
     }
 
-    public String getCompanyName() {
+    String getCompanyName() {
         return CompanyName;
     }
 
