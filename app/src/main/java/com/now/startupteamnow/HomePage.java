@@ -13,6 +13,7 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -45,6 +46,7 @@ public class HomePage extends AppCompatActivity  {
     private TextView fullname, amount;
     private ImageView profileImage, backImage;
     private ProgressBar bar;
+    private ImageButton Market, Survey;
     public  String res;
     private FusedLocationProviderClient fusedLocationClient;
     private LocationCallback locationCallback;
@@ -76,6 +78,21 @@ public class HomePage extends AppCompatActivity  {
             startLocationUpdates();
 
             GetUserInfo();
+
+            Market.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+
+                }
+            });
+
+
+            Survey.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+
+                }
+            });
 
             view.setOnNavigationItemSelectedListener(new BottomNavigationView.OnNavigationItemSelectedListener() {
                 @Override
@@ -304,6 +321,8 @@ public class HomePage extends AppCompatActivity  {
         profileImage = findViewById(R.id.profilimage);
         bar = findViewById(R.id.progressBar3);
         backImage = findViewById(R.id.BackImage);
+        Market = findViewById(R.id.Market);
+        Survey = findViewById(R.id.SurveyLink);
         mTopToolbar = findViewById(R.id.mToolbar);
     }
 
