@@ -28,6 +28,7 @@
         android:theme="@style/AppTheme"
         android:usesCleartextTraffic="true"
         tools:ignore="GoogleAppIndexingWarning">
+        <activity android:name=".Setting"></activity>
         <activity android:name=".History" />
         <activity android:name=".List" />
         <activity
@@ -53,8 +54,6 @@
         <meta-data
             android:name="preloaded_fonts"
             android:resource="@array/preloaded_fonts" />
-
-
     </application>
 
 </manifest>

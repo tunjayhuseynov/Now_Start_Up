@@ -12,10 +12,8 @@ import android.widget.Toast;
 public class LogIn extends AppCompatActivity {
 
     String patter = "(\\+994|0)(77|70|50|51|55)[0-9]{7}";
-    private EditText number;
-    private EditText pass;
-
-
+    private EditText number, pass;
+    private Button registration, login;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -24,15 +22,15 @@ public class LogIn extends AppCompatActivity {
         number = findViewById(R.id.number);
         pass = findViewById(R.id.pass);
 
-        Button registration = findViewById(R.id.qeydiyyat);
-        Button login = findViewById(R.id.daxilol);
+        registration = findViewById(R.id.qeydiyyat);
+        login = findViewById(R.id.daxilol);
 
         registration.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if(number.length() > 3 && pass.length() > 0){
+
                 Intent goToReg = new Intent(LogIn.this, Registration.class);
-                startActivity(goToReg);}
+                startActivity(goToReg);
             }
         });
 

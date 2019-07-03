@@ -46,7 +46,7 @@ public class HomePage extends AppCompatActivity  {
     private TextView fullname, amount;
     private ImageView profileImage, backImage;
     private ProgressBar bar;
-    private ImageButton Market, Survey;
+    private ImageButton Market, Survey, Setting;
     public  String res;
     private FusedLocationProviderClient fusedLocationClient;
     private LocationCallback locationCallback;
@@ -91,6 +91,15 @@ public class HomePage extends AppCompatActivity  {
                 @Override
                 public void onClick(View v) {
 
+                }
+            });
+
+            Setting.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Intent intent = new Intent(HomePage.this, com.now.startupteamnow.Setting.class);
+                    startActivity(intent);
+                    customType(HomePage.this, "right-to-left");
                 }
             });
 
@@ -321,9 +330,10 @@ public class HomePage extends AppCompatActivity  {
         profileImage = findViewById(R.id.profilimage);
         bar = findViewById(R.id.progressBar3);
         backImage = findViewById(R.id.BackImage);
-        Market = findViewById(R.id.Market);
+        Market = findViewById(R.id.market);
         Survey = findViewById(R.id.SurveyLink);
         mTopToolbar = findViewById(R.id.mToolbar);
+        Setting = findViewById(R.id.Setting);
     }
 
     private void ImageProcess(String imageUrl){

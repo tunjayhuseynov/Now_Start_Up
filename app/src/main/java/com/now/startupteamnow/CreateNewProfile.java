@@ -4,6 +4,7 @@ import android.app.DatePickerDialog;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
+import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.net.Uri;
@@ -26,7 +27,9 @@ import androidx.loader.content.CursorLoader;
 
 import com.squareup.picasso.Picasso;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.IOException;
 import java.util.Calendar;
 import java.util.Objects;
 
@@ -40,21 +43,20 @@ import retrofit2.Response;
 public class CreateNewProfile extends AppCompatActivity {
     ImageView pc ;
     private Uri image;
-    private String imageName;
-    private String nameUser;
-    private String surnameUser;
-
+    private Button btnPhoto, createbtn;
+    private EditText name, surname, adgunu;
+    private Spinner spinner;
+    private String imageName, nameUser, surnameUser;
+    private byte[] imagearray;
     private DatePickerDialog.OnDateSetListener dateSetListener;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_create_new_profile);
 
-        pc = findViewById(R.id.uploadedpc);
+        FINDall();
 
         //Drop List Made
-        final Spinner spinner = findViewById(R.id.spinner);
-
         String[] items = new String[]{"Kişi", "Qadın", "Cins"};
 
         ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_dropdown_item, items){
@@ -69,8 +71,6 @@ public class CreateNewProfile extends AppCompatActivity {
         spinner.setSelection(2);
 
         //Date Picker Made
-        final EditText adgunu = findViewById(R.id.adgunu);
-
         adgunu.setShowSoftInputOnFocus(false);
 
         adgunu.setOnClickListener(new View.OnClickListener() {
@@ -116,19 +116,12 @@ public class CreateNewProfile extends AppCompatActivity {
         };
 
         //Photo Upload
-        Button btnPhoto = findViewById(R.id.btnUpload);
         btnPhoto.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 OpenGallery();
             }
         });
-
-        // Name
-        final EditText name = findViewById(R.id.EditName);
-
-        // Surname
-        final EditText surname = findViewById(R.id.EditSurname);
 
         //Get Info From Prev Intent
         Intent getIntent = getIntent();
@@ -137,7 +130,6 @@ public class CreateNewProfile extends AppCompatActivity {
         final String password = getIntent.getStringExtra("password");
 
         // Create Button
-        Button createbtn = findViewById(R.id.createbtn);
         createbtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -162,11 +154,11 @@ public class CreateNewProfile extends AppCompatActivity {
                     user.setPhoneNumber(telefon);
                     user.setSurname(surnameUser);
 
-                    File imageFile = new File(getPath(image));
                     // Create a request body with file and image media type
-                    RequestBody fileReqBody = RequestBody.create(MediaType.parse(Objects.requireNonNull(getContentResolver().getType(image))), imageFile);
+                    RequestBody fileReqBody = RequestBody.create(MediaType.parse(Objects.requireNonNull(getContentResolver().getType(image))), imagearray);
+
                     // Create MultipartBody.Part using file request-body,file name and part name
-                    MultipartBody.Part part = MultipartBody.Part.createFormData("file", imageFile.getName(), fileReqBody);
+                    MultipartBody.Part part = MultipartBody.Part.createFormData("file", imageName, fileReqBody);
 
                     final Call<CheckResponse> call = jsonApi.postNewUser(Request_And_API_Key.Api_Key, part, user.getMap());
                     call.enqueue(new Callback<CheckResponse>() {
@@ -217,6 +209,17 @@ public class CreateNewProfile extends AppCompatActivity {
             if(data != null){
                 image = data.getData();
                 if(image != null){
+                    try {
+                        ByteArrayOutputStream stream = new ByteArrayOutputStream();
+                        Bitmap bitmap = MediaStore.Images.Media.getBitmap(this.getContentResolver(), image);
+                        bitmap.compress(Bitmap.CompressFormat.JPEG, 40, stream);
+
+                        imagearray = stream.toByteArray();
+
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+
                     File file = new File(getPath(image));
                     imageName = file.getName();
 
@@ -234,6 +237,16 @@ public class CreateNewProfile extends AppCompatActivity {
         int column_index = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
         cursor.moveToFirst();
         return cursor.getString(column_index);
+    }
+
+    private void FINDall(){
+        pc = findViewById(R.id.uploadedpc);
+        spinner = findViewById(R.id.spinner);
+        adgunu = findViewById(R.id.adgunu);
+        btnPhoto = findViewById(R.id.btnUpload);
+        name = findViewById(R.id.EditName);
+        surname = findViewById(R.id.EditSurname);
+        createbtn = findViewById(R.id.createbtn);
     }
 }
 
